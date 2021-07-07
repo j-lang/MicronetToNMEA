@@ -40,7 +40,7 @@
 
 #include <Arduino.h>
 #include <SPI.h>
-#include <wiring.h>
+#include <Wire.h>
 #include <iostream>
 #include <ELECHOUSE_CC1101_SRC_DRV.h>
 
@@ -100,22 +100,24 @@ MenuEntry_t mainMenu[] =
 
 void setup()
 {
+	// Init USB serial link
+	USB_CONSOLE.begin(USB_BAUDRATE);
+
 	// Load configuration from EEPROM
 	gConfiguration.LoadFromEeprom();
 	LoadCalibration();
-
-	// Init USB serial link
-	USB_CONSOLE.begin(USB_BAUDRATE);
 
 	// Init NMEA GNSS serial link
 	GNSS_SERIAL.setRX(GNSS_RX_PIN);
 	GNSS_SERIAL.setTX(GNSS_TX_PIN);
 	GNSS_SERIAL.begin(GNSS_BAUDRATE);
 
+#if USE_HC06
 	// Init serial link with HC-06
 	BLU_CONSOLE.setRX(BLU_RX_PIN);
 	BLU_CONSOLE.setTX(BLU_TX_PIN);
 	BLU_CONSOLE.begin(BLU_BAUDRATE);
+#endif
 
 	// Setup main menu
 	gMenuManager.SetMenu(mainMenu);
@@ -170,7 +172,7 @@ void setup()
 	gRfReceiver.setGDO(GDO0_PIN, GDO2_PIN); // Practicaly, GDO2 pin isn't used. You don't need to wire it
 	gRfReceiver.setCCMode(1); // set config for internal transmission mode.
 	gRfReceiver.setModulation(0); // set modulation mode. 0 = 2-FSK, 1 = GFSK, 2 = ASK/OOK, 3 = 4-FSK, 4 = MSK.
-	gRfReceiver.setMHZ(869.778 - 0.034); // Here you can set your basic frequency. The lib calculates the frequency automatically (default = 433.92).The cc1101 can: 300-348 MHZ, 387-464MHZ and 779-928MHZ. Read More info from datasheet.
+	gRfReceiver.setMHZ(869.835 - 0.071); // Here you can set your basic frequency. The lib calculates the frequency automatically (default = 433.92).The cc1101 can: 300-348 MHZ, 387-464MHZ and 779-928MHZ. Read More info from datasheet.
 	gRfReceiver.setDeviation(34); // Set the Frequency deviation in kHz. Value from 1.58 to 380.85. Default is 47.60 kHz.
 	gRfReceiver.setChannel(0); // Set the Channelnumber from 0 to 255. Default is cahnnel 0.
 	gRfReceiver.setChsp(199.95); // The channel spacing is multiplied by the channel number CHAN and added to the base frequency in kHz. Value from 25.39 to 405.45. Default is 199.95 kHz.

@@ -36,8 +36,10 @@
 /***************************************************************************/
 
 // Use LSM303DLH configuration
-#define USE_LSM303DLH        0
-#define LSM303DLH_I2C        Wire1
+#define USE_LSM303DLH        1
+#define LSM303DLH_I2C        Wire
+//#define LSM303DLH
+#define LSM303DLHC
 
 // CC1101/SPI pins
 #define CS0_PIN              10
@@ -55,25 +57,28 @@
 
 // NMEA/GNSS UART pins
 #define GNSS_SERIAL   Serial1
-#define GNSS_BAUDRATE 38400
+#define GNSS_BAUDRATE 9600
 #define GNSS_CALLBACK serialEvent1
 #define GNSS_RX_PIN   0
 #define GNSS_TX_PIN   1
 
 // Wired UART params
 #define USB_CONSOLE  Serial
-#define USB_BAUDRATE 115200
+#define USB_BAUDRATE 38400
 
+#define USE_HC06 0
+#if USE_HC06
 // Wireless Bluetooth UART params
 #define BLU_CONSOLE  Serial5
 #define BLU_BAUDRATE 115200
 #define BLU_RX_PIN   34
 #define BLU_TX_PIN   33
+#endif
 
 // The console to use for menu and NMEA output
-#define CONSOLE BLU_CONSOLE
-#define NMEA_OUT BLU_CONSOLE
-#define NMEA_IN BLU_CONSOLE
+#define CONSOLE USB_CONSOLE
+#define NMEA_OUT USB_CONSOLE
+#define NMEA_IN USB_CONSOLE
 
 // NMEA decoder configuration
 #define DISABLE_NMEA_CHECKSUM 0

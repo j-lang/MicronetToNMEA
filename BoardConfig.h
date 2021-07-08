@@ -36,7 +36,7 @@
 /***************************************************************************/
 
 // Use LSM303DLH configuration
-#define USE_LSM303DLH        1
+#define USE_LSM303           1
 #define LSM303DLH_I2C        Wire
 //#define LSM303DLH
 #define LSM303DLHC
@@ -64,7 +64,7 @@
 
 // Wired UART params
 #define USB_CONSOLE  Serial
-#define USB_BAUDRATE 38400
+#define USB_BAUDRATE 115200
 
 #define USE_HC06 0
 #if USE_HC06

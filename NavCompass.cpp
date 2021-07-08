@@ -5,66 +5,15 @@
  *      Author: Ronan
  */
 
-#include "NavCompass.h"
 #include "BoardConfig.h"
 #include "Globals.h"
+#include "NavCompass.h"
 
 #include <Wire.h>
 
-#define LSM303DLH_MAG_ADDR  0x1E
-#if defined LSM303DLH
-#define LSM303DLH_ACC_ADDR  0x18
-#elif defined LSM303DLHC
-#define LSM303DLH_ACC_ADDR  0x19
-#endif
-
-#define CTRL_REG1_A       0x20
-#define CTRL_REG2_A       0x21
-#define CTRL_REG3_A       0x22
-#define CTRL_REG4_A       0x23
-#define CTRL_REG5_A       0x24
-#if defined LSM303DLH
-#define HP_FILTER_RESET_A 0x25
-#elif defined LSM303DLHC
-#define CTRL_REG6_A       0x25
-#endif
-#define REFERENCE_A       0x26
-#define STATUS_REG_A      0x27
-#define OUT_X_L_A         0x28
-#define OUT_X_H_A         0x29
-#define OUT_Y_L_A         0x2a
-#define OUT_Y_H_A         0x2b
-#define OUT_Z_L_A         0x2c
-#define OUT_Z_H_A         0x2d
-#if defined LSM303DLHC
-#define FIFO_CTRL_REG_A   0x2e
-#define FIFO_SRC_REG_A    0x2f
-#endif
-#define INT1_CFG_A        0x30
-#define INT1_SOURCE_A     0x31
-#define INT1_THS_A        0x32
-#define INT1_DURATION_A   0x33
-#define INT2_CFG_A        0x34
-#define INT2_SOURCE_A     0x35
-#define INT2_THS_A        0x36
-#define INT2_DURATION_A   0x37
-#define CRA_REG_M         0x00
-#define CRB_REG_M         0x01
-#define MR_REG_M          0x02
-#define OUT_X_H_M         0x03
-#define OUT_X_L_M         0x04
-#define OUT_Y_H_M         0x05
-#define OUT_Y_L_M         0x06
-#define OUT_Z_H_M         0x07
-#define OUT_Z_L_M         0x08
-#define SR_REG_M          0x09
-#define IRA_REG_M         0x0a
-#define IRB_REG_M         0x0b
-#define IRC_REG_M         0x0c
-#if defined LSM303DLHC
-#define TEMP_OUT_H_M      0x31 // this may conflicting with INT1_SOURCE_A
-#define TEMP_OUT_L_M      0x32 // this may conflicting with INT1_THS_A
-#endif
+static float Mag_LSB_XY = 1100.0F; // Varies with gain
+static float Mag_LSB_Z = 980.0F;   // Varies with gain
+static float Acc_LSB = 0.003;      // Varies with gain
 
 NavCompass::NavCompass() :
 		heading(0), magX(0), magY(0), magZ(0), accX(0), accY(0), accZ(0)
@@ -88,24 +37,42 @@ bool NavCompass::Init()
 		return false;
 	}
 
+	// Magnetic register
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x10, CRA_REG_M);   // 0x10=0b00010000 ODR 15Hz
+	//I2CWrite(LSM303DLH_MAG_ADDR, 0x0C, CRA_REG_M);   // 0x0C=0b00110000 ODR 7.5Hz
 #if defined LSM303DLH
-	// DLHC Acceleration register
-	I2CWrite(LSM303DLH_ACC_ADDR, 0x27, CTRL_REG1_A); // 0x27 = ODR 50hz all axes on
-	// DLHC Magnetic register
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x10, CRA_REG_M);   // 15Hz
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x03, CRB_REG_M);   // Gauss range
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x00, MR_REG_M);    // Continuous mode
+	// DLH Acceleration register
+	I2CWrite(LSM303DLH_ACC_ADDR, 0x27, CTRL_REG1_A); // 0x27=0b00100111 Normal Mode, ODR 50hz, all axes on
+	I2CWrite(LSM303DLH_ACC_ADDR, 0x00, CTRL_REG4_A); // 0x00=0b00000000 full scale +/- 2Gauss, highRes on
+	Acc_LSB = 0.0039;
+	// DLH Magnetic register
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Gauss range: +/-2.5Gauss
+	Mag_LSB_XY = 635;
+	Mag_LSB_Z = 570;
 #elif defined LSM303DLHC
 	// DLHC Acceleration register
 	I2CWrite(LSM303DLH_ACC_ADDR, 0x47, CTRL_REG1_A); // 0x47=0b01000111 Normal Mode, ODR 50hz, all axes on
-	//I2CWrite(LSM303DLH_ACC_ADDR, 0x08, CTRL_REG4_A); // 0x08=0b00001000 full scale +/- 2Gauss, highRes on
-	I2CWrite(LSM303DLH_ACC_ADDR, 0x18, CTRL_REG4_A); // 0x08=0b00011000 full scale +/- 4Gauss, highRes on
+	//I2CWrite(LSM303DLH_ACC_ADDR, 0x77, CTRL_REG1_A); // 0x77=0b01110111 Normal Mode, ODR 400hz, all axes on
+	//I2CWrite(LSM303DLH_ACC_ADDR, 0x08, CTRL_REG4_A); // 0x08=0b00001000 full scale +/-2Gauss, highRes on
+	//Acc_LSB = 0.00098;
+	I2CWrite(LSM303DLH_ACC_ADDR, 0x18, CTRL_REG4_A); // 0x18=0b00011000 full scale +/-4Gauss, highRes on
+	Acc_LSB = 0.00195;
+	//I2CWrite(LSM303DLH_ACC_ADDR, 0x38, CTRL_REG4_A);   // 0x38=0b00111000 full scale +/-8Gauss, highRes on
+	//Acc_LSB = 0.0039;
 	// DLHC Magnetic register
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x10, CRA_REG_M);   // 0x10=0b00010000 ODR 15Hz
-	//I2CWrite(LSM303DLH_MAG_ADDR, 0x0C, CRA_REG_M);   // 0x0C=0b00110000 ODR 7.5Hz
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x20, CRB_REG_M);   // 0x20=0b00100000 Gauss range: +/-1.3G gain: 1100LSB/Gauss
-	//I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Gauss range: +/-2.5G gain: 670LSB/Gauss
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x20, CRB_REG_M);   // 0x20=0b00100000 Gauss range: +/-1.3Gauss gain: 1100LSB/Gauss
+	Mag_LSB_XY = 1100;
+	Mag_LSB_Z = 980;
+	//I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Gauss range: +/-2.5Gauss gain: 670LSB/Gauss
+	//Mag_LSB_XY = 670;
+	//Mag_LSB_Z = 600;
+#endif
 	I2CWrite(LSM303DLH_MAG_ADDR, 0x00, MR_REG_M);    // Continuous mode
+
+#ifdef Working_with_raw_data
+	Mag_LSB_XY = 1.0F;
+	Mag_LSB_Z = 1.0F;
+	Acc_LSB = 1.0F;
 #endif
 
 	return true;
@@ -129,16 +96,16 @@ void NavCompass::GetMagneticField(float *magX, float *magY, float *magZ)
 #endif
 
 #if defined LSM303DLH
-	*magX = ((float) mx / 635.0f);
-	*magY = ((float) my / 635.0f);
-	*magZ = ((float) mz / 570.0f); // lower gain for z mag
+	*magX = ((float) mx / Mag_LSB_XY * GAUSS_TO_MICROTESLA;);
+	*magY = ((float) my / Mag_LSB_XY * GAUSS_TO_MICROTESLA;);
+	*magZ = ((float) mz / Mag_LSB_Z * GAUSS_TO_MICROTESLA;);
 #elif defined LSM303DLHC
-	*magX = (float) mx;
-	*magY = (float) my;
-	*magZ = (float) mz;
-	m.x = mx;
-	m.y = my;
-	m.z = mz;
+	*magX = (float) mx / Mag_LSB_XY * GAUSS_TO_MICROTESLA;
+	*magY = (float) my / Mag_LSB_XY * GAUSS_TO_MICROTESLA;
+	*magZ = (float) mz / Mag_LSB_Z * GAUSS_TO_MICROTESLA;
+	m.x = mx / Mag_LSB_XY * GAUSS_TO_MICROTESLA;
+	m.y = my / Mag_LSB_XY * GAUSS_TO_MICROTESLA;
+	m.z = mz / Mag_LSB_Z * GAUSS_TO_MICROTESLA;
 #endif
 }
 
@@ -154,22 +121,22 @@ void NavCompass::GetAcceleration(float *accX, float *accY, float *accZ)
 	az = (az << 8) | I2CRead(LSM303DLH_ACC_ADDR, OUT_Z_L_A);
 
 #if defined LSM303DLH
-	*accX = (float) -ax / 16384.0f; // 2^14, but DLH acc resolution is 10 bit
-	*accY = (float) -ay / 16384.0f;
-	*accZ = (float) -az / 16384.0f;
+	*accX = (float) (ax >> 6) * Acc_LSB * GRAVITY_STANDARD; // DLH acc resolution is 10 bit
+	*accY = (float) (ay >> 6) * Acc_LSB * GRAVITY_STANDARD;
+	*accZ = (float) (az >> 6) * Acc_LSB * GRAVITY_STANDARD;
 #elif defined LSM303DLHC
-	*accX = (float) ax / 16.; //Acceleration data registers contain a left-aligned 12-bit number, so values should be shifted right by 4 bits (divided by 16)
-	*accY = (float) ay / 16.;
-	*accZ = (float) az / 16.;
-	a.x = ax / 16;
-	a.y = ay / 16;
-	a.z = az / 16;
+	*accX = (float) (ax >> 4) * Acc_LSB * GRAVITY_STANDARD; // DLHC registers contain a left-aligned 12-bit number, so values should be shifted right by 4 bits (divided by 16)
+	*accY = (float) (ay >> 4) * Acc_LSB * GRAVITY_STANDARD;
+	*accZ = (float) (az >> 4) * Acc_LSB * GRAVITY_STANDARD;
+	a.x = (ax >> 4) * Acc_LSB * GRAVITY_STANDARD;
+	a.y = (ay >> 4) * Acc_LSB * GRAVITY_STANDARD;
+	a.z = (az >> 4) * Acc_LSB * GRAVITY_STANDARD;
 #endif
 }
 
 float NavCompass::GetHeading()
 {
-	float mx, my, mz;
+  float mx, my, mz;
 	float ax, ay, az;
 #if defined LSM303DLH
 	float pBow, pStarboard;
@@ -183,7 +150,9 @@ float NavCompass::GetHeading()
 
 	// Get Acceleration and Magnetic data from LSM303
 	GetAcceleration(&ax, &ay, &az);
+//Serial.printf("ax %f ay %f az %f\n", ax, ay, az);
 	GetMagneticField(&mx, &my, &mz);
+//Serial.printf("mx %f my %f mz %f\n", mx, my, mz);
 	// Substract calibration offsets from magnetic readings
 #if defined LSM303DLH
 	mx -= gConfiguration.xMagOffset;
@@ -200,9 +169,8 @@ float NavCompass::GetHeading()
 	pBow = mx;
 	pStarboard = (my * ey + mz * ez) / normE;
 
-  float heading = atan2(-pStarboard, pBow) * 180 / M_PI;
+	float heading = atan2(-pStarboard, pBow) * 180 / M_PI;
 #elif defined LSM303DLHC
-//Serial.printf("ax %d ay %d az %d\n", a.x, a.y, a.z);
 	// subtract offset (average of min and max) from magnetometer readings
 	m.x -= (int16_t) gConfiguration.xMagOffset;
 	m.y -= (int16_t) gConfiguration.yMagOffset;
@@ -212,11 +180,11 @@ float NavCompass::GetHeading()
 	//TODO : filter data, has to be synchronized with transmission, ev. higher ODR
 	// Apply low-pass filter to accelerometer data
 //	for (byte i = 0; i < 10; i++) {
-//		GetAcceleration(&ax, &ay, &az);   // Read accelerometer data
+//		GetAcceleration(&ax, &ay, &az); // Read accelerometer data
 //		fXa = a.x * alpha + (fXa * (1.0 - alpha));
 //		fYa = a.y * alpha + (fYa * (1.0 - alpha));
 //		fZa = a.z * alpha + (fZa * (1.0 - alpha));
-//		delay(5);
+//		delay(2);
 //	}
 //	a.x = fXa;
 //	a.y = fYa;
@@ -235,7 +203,7 @@ float NavCompass::GetHeading()
 	// compute heading
 	float heading = atan2(vector_dot(&E, &from), vector_dot(&N, &from)) * 180 / PI;
 #endif
-	if (heading < 0) 
+	if (heading < 0)
 		heading += 360;
 //Serial.printf("heading %f\n", heading);
 	return heading;

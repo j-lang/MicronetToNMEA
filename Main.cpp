@@ -69,7 +69,7 @@ void MenuScanNetworks();
 void MenuAttachNetwork();
 void MenuConvertToNmea();
 void MenuScanAllMicronetTraffic();
-#if USE_LSM303DLH
+#if USE_LSM303
 void MenuCalibrateMagnetoMeter();
 #endif
 void SaveCalibration();
@@ -89,10 +89,10 @@ MenuEntry_t mainMenu[] =
 { "Attach converter to a network", MenuAttachNetwork },
 { "Start NMEA conversion", MenuConvertToNmea },
 { "Scan all surrounding Micronet traffic", MenuScanAllMicronetTraffic },
-#if USE_LSM303DLH
-		{ "Calibrate magnetometer", MenuCalibrateMagnetoMeter },
+#if USE_LSM303
+{ "Calibrate magnetometer", MenuCalibrateMagnetoMeter },
 #endif
-		{ nullptr, nullptr } };
+{ nullptr, nullptr } };
 
 /***************************************************************************/
 /*                              Functions                                  */
@@ -147,8 +147,8 @@ void setup()
 	}
 	CONSOLE.println("OK");
 
-#if USE_LSM303DLH
-	CONSOLE.print("Initializing LSM303DLH ... ");
+#if USE_LSM303
+	CONSOLE.print("Initializing LSM303 ... ");
 	if (!gNavCompass.Init())
 	{
 		/* There was a problem detecting the LSM303 ... check your connections */
@@ -407,8 +407,8 @@ void MenuAbout()
 	CONSOLE.println(gConfiguration.waterSpeedFactor_per);
 	CONSOLE.print("Water temperature offset = ");
 	CONSOLE.println((int) (gConfiguration.waterTemperatureOffset_C));
-#if USE_LSM303DLH
-	CONSOLE.println("Using LSM303DLH for magnetic heading");
+#if USE_LSM303
+	CONSOLE.println("Using LSM303 for magnetic heading");
 	CONSOLE.print("Magnetometer calibration : ");
 	CONSOLE.print(gConfiguration.xMagOffset);
 	CONSOLE.print(" ");
@@ -609,7 +609,7 @@ void MenuConvertToNmea()
 	static int count = 0;
 	SlotDef_t txSlot;
 	uint8_t payloadLength;
-#if USE_LSM303DLH
+#if USE_LSM303
 	uint32_t lastHeadingTime = millis();
 	float filteredHeading = 0, heading;
 #endif
@@ -713,7 +713,7 @@ void MenuConvertToNmea()
 		}
 		gNavDecoder.resetSentences();
 
-#if USE_LSM303DLH
+#if USE_LSM303
 //		static int count;
 		// Handle magnetic compass
 		// Only request new reading if previous is at least 100ms old
@@ -789,7 +789,7 @@ void MenuScanAllMicronetTraffic()
 	} while (!exitSniffLoop);
 }
 
-#if USE_LSM303DLH
+#if USE_LSM303
 void MenuCalibrateMagnetoMeter()
 {
 	bool exitLoop = false;

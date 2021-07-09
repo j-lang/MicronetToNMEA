@@ -38,8 +38,10 @@ bool NavCompass::Init()
 	}
 
 	// Magnetic register
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x10, CRA_REG_M);   // 0x10=0b00010000 ODR 15Hz
-	//I2CWrite(LSM303DLH_MAG_ADDR, 0x0C, CRA_REG_M);   // 0x0C=0b00110000 ODR 7.5Hz
+//	I2CWrite(LSM303DLH_MAG_ADDR, 0x0C, CRA_REG_M); // 0x0C=0b00001100 ODR 7.5Hz
+//	I2CWrite(LSM303DLH_MAG_ADDR, 0x10, CRA_REG_M); // 0x10=0b00010000 ODR 15Hz
+//	I2CWrite(LSM303DLH_MAG_ADDR, 0x14, CRA_REG_M); // 0x14=0b00010100 ODR 30Hz
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x18, CRA_REG_M); // 0x18=0b00011000 ODR 75Hz
 #if defined LSM303DLH
 	// DLH Acceleration register
 	I2CWrite(LSM303DLH_ACC_ADDR, 0x27, CTRL_REG1_A); // 0x27=0b00100111 Normal Mode, ODR 50hz, all axes on
@@ -51,21 +53,23 @@ bool NavCompass::Init()
 	Mag_LSB_Z = 570;
 #elif defined LSM303DLHC
 	// DLHC Acceleration register
-	I2CWrite(LSM303DLH_ACC_ADDR, 0x47, CTRL_REG1_A); // 0x47=0b01000111 Normal Mode, ODR 50hz, all axes on
-	//I2CWrite(LSM303DLH_ACC_ADDR, 0x77, CTRL_REG1_A); // 0x77=0b01110111 Normal Mode, ODR 400hz, all axes on
-	//I2CWrite(LSM303DLH_ACC_ADDR, 0x08, CTRL_REG4_A); // 0x08=0b00001000 full scale +/-2Gauss, highRes on
-	//Acc_LSB = 0.00098;
+//	I2CWrite(LSM303DLH_ACC_ADDR, 0x47, CTRL_REG1_A); // 0x47=0b01000111 Normal Mode, ODR 50hz, all axes on
+	I2CWrite(LSM303DLH_ACC_ADDR, 0x57, CTRL_REG1_A); // 0x57=0b01010111 Normal Mode, ODR 100hz, all axes on
+//	I2CWrite(LSM303DLH_ACC_ADDR, 0x67, CTRL_REG1_A); // 0x67=0b01100111 Normal Mode, ODR 200hz, all axes on
+//	I2CWrite(LSM303DLH_ACC_ADDR, 0x77, CTRL_REG1_A); // 0x77=0b01110111 Normal Mode, ODR 400hz, all axes on
+//	I2CWrite(LSM303DLH_ACC_ADDR, 0x08, CTRL_REG4_A); // 0x08=0b00001000 full scale +/-2Gauss, highRes on
+//	Acc_LSB = 0.00098;
 	I2CWrite(LSM303DLH_ACC_ADDR, 0x18, CTRL_REG4_A); // 0x18=0b00011000 full scale +/-4Gauss, highRes on
 	Acc_LSB = 0.00195;
-	//I2CWrite(LSM303DLH_ACC_ADDR, 0x38, CTRL_REG4_A);   // 0x38=0b00111000 full scale +/-8Gauss, highRes on
-	//Acc_LSB = 0.0039;
+//	I2CWrite(LSM303DLH_ACC_ADDR, 0x38, CTRL_REG4_A); // 0x38=0b00111000 full scale +/-8Gauss, highRes on
+//	Acc_LSB = 0.0039;
 	// DLHC Magnetic register
 	I2CWrite(LSM303DLH_MAG_ADDR, 0x20, CRB_REG_M);   // 0x20=0b00100000 Gauss range: +/-1.3Gauss gain: 1100LSB/Gauss
 	Mag_LSB_XY = 1100;
 	Mag_LSB_Z = 980;
-	//I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Gauss range: +/-2.5Gauss gain: 670LSB/Gauss
-	//Mag_LSB_XY = 670;
-	//Mag_LSB_Z = 600;
+//	I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Gauss range: +/-2.5Gauss gain: 670LSB/Gauss
+//	Mag_LSB_XY = 670;
+//	Mag_LSB_Z = 600;
 #endif
 	I2CWrite(LSM303DLH_MAG_ADDR, 0x00, MR_REG_M);    // Continuous mode
 

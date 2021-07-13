@@ -47,7 +47,7 @@
 #define MISO_PIN             12
 #define SCK_PIN              14
 #define GDO0_PIN             24
-#define GDO2_PIN             25
+#define GDO2_PIN             25 // not used
 
 // ERROR LED pin
 #define LED_PIN              LED_BUILTIN
@@ -57,7 +57,7 @@
 
 // NMEA/GNSS UART pins
 #define GNSS_SERIAL   Serial1
-#define GNSS_BAUDRATE 9600
+#define GNSS_BAUDRATE 38400
 #define GNSS_CALLBACK serialEvent1
 #define GNSS_RX_PIN   0
 #define GNSS_TX_PIN   1

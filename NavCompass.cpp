@@ -45,10 +45,10 @@ bool NavCompass::Init()
 #if defined LSM303DLH
 	// DLH Acceleration register
 	I2CWrite(LSM303DLH_ACC_ADDR, 0x27, CTRL_REG1_A); // 0x27=0b00100111 Normal Mode, ODR 50hz, all axes on
-	I2CWrite(LSM303DLH_ACC_ADDR, 0x00, CTRL_REG4_A); // 0x00=0b00000000 full scale +/- 2Gauss, highRes on
+	I2CWrite(LSM303DLH_ACC_ADDR, 0x00, CTRL_REG4_A); // 0x00=0b00000000 Range: +/-2 Gal, Sens.: 1mGal/LSB
 	Acc_LSB = 0.0039;
 	// DLH Magnetic register
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Gauss range: +/-2.5Gauss
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Range: +/-2.5 Gauss gain: 635LSB/Gauss
 	Mag_LSB_XY = 635;
 	Mag_LSB_Z = 570;
 #elif defined LSM303DLHC
@@ -57,17 +57,17 @@ bool NavCompass::Init()
 	I2CWrite(LSM303DLH_ACC_ADDR, 0x57, CTRL_REG1_A); // 0x57=0b01010111 Normal Mode, ODR 100hz, all axes on
 //	I2CWrite(LSM303DLH_ACC_ADDR, 0x67, CTRL_REG1_A); // 0x67=0b01100111 Normal Mode, ODR 200hz, all axes on
 //	I2CWrite(LSM303DLH_ACC_ADDR, 0x77, CTRL_REG1_A); // 0x77=0b01110111 Normal Mode, ODR 400hz, all axes on
-//	I2CWrite(LSM303DLH_ACC_ADDR, 0x08, CTRL_REG4_A); // 0x08=0b00001000 full scale +/-2Gauss, highRes on
+//	I2CWrite(LSM303DLH_ACC_ADDR, 0x08, CTRL_REG4_A); // 0x08=0b00001000 Range: +/-2 Gal, Sens.: 1mGal/LSB, highRes on
 //	Acc_LSB = 0.00098;
-	I2CWrite(LSM303DLH_ACC_ADDR, 0x18, CTRL_REG4_A); // 0x18=0b00011000 full scale +/-4Gauss, highRes on
+	I2CWrite(LSM303DLH_ACC_ADDR, 0x18, CTRL_REG4_A); // 0x18=0b00011000 Range: +/-4 Gal, Sens.: 2mGal/LSB, highRes on
 	Acc_LSB = 0.00195;
-//	I2CWrite(LSM303DLH_ACC_ADDR, 0x38, CTRL_REG4_A); // 0x38=0b00111000 full scale +/-8Gauss, highRes on
+//	I2CWrite(LSM303DLH_ACC_ADDR, 0x28, CTRL_REG4_A); // 0x28=0b00101000 Range: +/-8 Gal, Sens.: 4mGal/LSB, highRes on
 //	Acc_LSB = 0.0039;
 	// DLHC Magnetic register
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x20, CRB_REG_M);   // 0x20=0b00100000 Gauss range: +/-1.3Gauss gain: 1100LSB/Gauss
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x20, CRB_REG_M);   // 0x20=0b00100000 Range: +/-1.3 Gauss gain: 1100LSB/Gauss
 	Mag_LSB_XY = 1100;
 	Mag_LSB_Z = 980;
-//	I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Gauss range: +/-2.5Gauss gain: 670LSB/Gauss
+//	I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Range: +/-2.5 Gauss gain: 670LSB/Gauss
 //	Mag_LSB_XY = 670;
 //	Mag_LSB_Z = 600;
 #endif

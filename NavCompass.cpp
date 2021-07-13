@@ -56,11 +56,10 @@ bool NavCompass::Init()
 //	I2CWrite(LSM303DLH_ACC_ADDR, 0x47, CTRL_REG1_A); // 0x47=0b01000111 Normal Mode, ODR 50hz, all axes on
 	I2CWrite(LSM303DLH_ACC_ADDR, 0x57, CTRL_REG1_A); // 0x57=0b01010111 Normal Mode, ODR 100hz, all axes on
 //	I2CWrite(LSM303DLH_ACC_ADDR, 0x67, CTRL_REG1_A); // 0x67=0b01100111 Normal Mode, ODR 200hz, all axes on
-//	I2CWrite(LSM303DLH_ACC_ADDR, 0x77, CTRL_REG1_A); // 0x77=0b01110111 Normal Mode, ODR 400hz, all axes on
-//	I2CWrite(LSM303DLH_ACC_ADDR, 0x08, CTRL_REG4_A); // 0x08=0b00001000 Range: +/-2 Gal, Sens.: 1mGal/LSB, highRes on
-//	Acc_LSB = 0.00098;
-	I2CWrite(LSM303DLH_ACC_ADDR, 0x18, CTRL_REG4_A); // 0x18=0b00011000 Range: +/-4 Gal, Sens.: 2mGal/LSB, highRes on
-	Acc_LSB = 0.00195;
+	I2CWrite(LSM303DLH_ACC_ADDR, 0x08, CTRL_REG4_A); // 0x08=0b00001000 Range: +/-2 Gal, Sens.: 1mGal/LSB, highRes on
+	Acc_LSB = 0.00098;
+//	I2CWrite(LSM303DLH_ACC_ADDR, 0x18, CTRL_REG4_A); // 0x18=0b00011000 Range: +/-4 Gal, Sens.: 2mGal/LSB, highRes on
+//	Acc_LSB = 0.00195;
 //	I2CWrite(LSM303DLH_ACC_ADDR, 0x28, CTRL_REG4_A); // 0x28=0b00101000 Range: +/-8 Gal, Sens.: 4mGal/LSB, highRes on
 //	Acc_LSB = 0.0039;
 	// DLHC Magnetic register
@@ -99,17 +98,13 @@ void NavCompass::GetMagneticField(float *magX, float *magY, float *magZ)
 	my = ((int16_t) (magBuffer[4] << 8)) | magBuffer[5];
 #endif
 
-#if defined LSM303DLH
-	*magX = ((float) mx / Mag_LSB_XY * GAUSS_TO_MICROTESLA;);
-	*magY = ((float) my / Mag_LSB_XY * GAUSS_TO_MICROTESLA;);
-	*magZ = ((float) mz / Mag_LSB_Z * GAUSS_TO_MICROTESLA;);
-#elif defined LSM303DLHC
-	*magX = (float) mx / Mag_LSB_XY * GAUSS_TO_MICROTESLA;
-	*magY = (float) my / Mag_LSB_XY * GAUSS_TO_MICROTESLA;
-	*magZ = (float) mz / Mag_LSB_Z * GAUSS_TO_MICROTESLA;
-	m.x = mx / Mag_LSB_XY * GAUSS_TO_MICROTESLA;
-	m.y = my / Mag_LSB_XY * GAUSS_TO_MICROTESLA;
-	m.z = mz / Mag_LSB_Z * GAUSS_TO_MICROTESLA;
+	*magX = (float) mx;
+	*magY = (float) my;
+	*magZ = (float) mz;
+#if defined LSM303DLHC
+	m.x = mx;
+	m.y = my;
+	m.z = mz;
 #endif
 }
 
@@ -125,30 +120,28 @@ void NavCompass::GetAcceleration(float *accX, float *accY, float *accZ)
 	az = (az << 8) | I2CRead(LSM303DLH_ACC_ADDR, OUT_Z_L_A);
 
 #if defined LSM303DLH
-	*accX = (float) (ax >> 6) * Acc_LSB * GRAVITY_STANDARD; // DLH acc resolution is 10 bit
-	*accY = (float) (ay >> 6) * Acc_LSB * GRAVITY_STANDARD;
-	*accZ = (float) (az >> 6) * Acc_LSB * GRAVITY_STANDARD;
+	*accX = (float) (ax >> 6); // DLH acc resolution is 10 bit
+	*accY = (float) (ay >> 6);
+	*accZ = (float) (az >> 6);
 #elif defined LSM303DLHC
-	*accX = (float) (ax >> 4) * Acc_LSB * GRAVITY_STANDARD; // DLHC registers contain a left-aligned 12-bit number, so values should be shifted right by 4 bits (divided by 16)
-	*accY = (float) (ay >> 4) * Acc_LSB * GRAVITY_STANDARD;
-	*accZ = (float) (az >> 4) * Acc_LSB * GRAVITY_STANDARD;
-	a.x = (ax >> 4) * Acc_LSB * GRAVITY_STANDARD;
-	a.y = (ay >> 4) * Acc_LSB * GRAVITY_STANDARD;
-	a.z = (az >> 4) * Acc_LSB * GRAVITY_STANDARD;
+	*accX = (float) (ax >> 4); // DLHC registers contain a left-aligned 12-bit number, so values should be shifted right by 4 bits (divided by 16)
+	*accY = (float) (ay >> 4);
+	*accZ = (float) (az >> 4);
+	a.x = (ax >> 4);
+	a.y = (ay >> 4);
+	a.z = (az >> 4);
 #endif
 }
 
 float NavCompass::GetHeading()
 {
-  float mx, my, mz;
+	float mx, my, mz;
 	float ax, ay, az;
 #if defined LSM303DLH
 	float pBow, pStarboard;
 	float ey, ez;
 	float normE;
 #elif defined LSM303DLHC
-//	const float alpha = 0.1;
-//	uint16_t fXa=0, fYa=0, fZa=0;
 	vector<int16_t> from = {1, 0, 0}; // x axis is reference direction
 #endif
 
@@ -175,25 +168,12 @@ float NavCompass::GetHeading()
 
 	float heading = atan2(-pStarboard, pBow) * 180 / M_PI;
 #elif defined LSM303DLHC
+#if defined SIMPLE_CALIBRATION
 	// subtract offset (average of min and max) from magnetometer readings
 	m.x -= (int16_t) gConfiguration.xMagOffset;
 	m.y -= (int16_t) gConfiguration.yMagOffset;
 	m.z -= (int16_t) gConfiguration.zMagOffset;
 //Serial.printf("mx %d my %d mz %d\n", m.x, m.y, m.z);
-
-	//TODO : filter data, has to be synchronized with transmission, ev. higher ODR
-	// Apply low-pass filter to accelerometer data
-//	for (byte i = 0; i < 10; i++) {
-//		GetAcceleration(&ax, &ay, &az); // Read accelerometer data
-//		fXa = a.x * alpha + (fXa * (1.0 - alpha));
-//		fYa = a.y * alpha + (fYa * (1.0 - alpha));
-//		fZa = a.z * alpha + (fZa * (1.0 - alpha));
-//		delay(2);
-//	}
-//	a.x = fXa;
-//	a.y = fYa;
-//	a.z = fZa;
-
 	// compute E and N
 	vector<float> E;
 	vector<float> N;
@@ -206,6 +186,36 @@ float NavCompass::GetHeading()
 
 	// compute heading
 	float heading = atan2(vector_dot(&E, &from), vector_dot(&N, &from)) * 180 / PI;
+#else
+	float pitch, roll, Xa_off, Ya_off, Za_off, Xa_cal, Ya_cal, Za_cal, Xm_off, Ym_off, Zm_off, Xm_cal, Ym_cal, Zm_cal, fXm_comp, fYm_comp;
+	// Accelerometer calibration
+	Xa_off = a.x/16.0 + 17.863863; //X-axis combined bias (Non calibrated data - bias)
+	Ya_off = a.y/16.0 - 31.487140; //Y-axis combined bias (Default: substracting bias)
+	Za_off = a.z/16.0 + 101.113647; //Z-axis combined bias
+	Xa_cal =  0.957747*Xa_off - 0.020159*Ya_off - 0.014851*Za_off; //X-axis correction for combined scale factors (Default: positive factors)
+	Ya_cal = -0.020159*Xa_off + 1.000078*Ya_off - 0.005467*Za_off; //Y-axis correction for combined scale factors
+	Za_cal = -0.014851*Xa_off - 0.005467*Ya_off + 0.943386*Za_off; //Z-axis correction for combined scale factors
+
+	// Magnetometer calibration
+	Xm_off = m.x*(100000.0/1100.0) + 3349.912409; //X-axis combined bias (Non calibrated data - bias)
+	Ym_off = m.y*(100000.0/1100.0) + 7566.200966; //Y-axis combined bias (Default: substracting bias)
+	Zm_off = m.z*(100000.0/980.0 ) - 916.252655; //Z-axis combined bias
+	Xm_cal =  1.023288*Xm_off + 0.006969*Ym_off + 0.012757*Zm_off; //X-axis correction for combined scale factors (Default: positive factors)
+	Ym_cal =  0.006969*Xm_off + 0.950484*Ym_off + 0.026035*Zm_off; //Y-axis correction for combined scale factors
+	Zm_cal =  0.012757*Xm_off + 0.026035*Ym_off + 0.988869*Zm_off; //Z-axis correction for combined scale factors
+
+	// Pitch and roll
+	roll  = atan2(fYa, sqrt(fXa*fXa + fZa*fZa));
+	pitch = atan2(fXa, sqrt(fYa*fYa + fZa*fZa));
+
+	// Tilt compensated magnetic sensor measurements
+	fXm_comp = fXm*cos(pitch)+fZm*sin(pitch);
+	fYm_comp = fXm*sin(roll)*sin(pitch)+fYm*cos(roll)-fZm*sin(roll)*cos(pitch);
+
+	// Arctangent of y/x
+	heading = (atan2(fYm_comp,fXm_comp)*180.0)/M_PI;
+#endif
+
 #endif
 	if (heading < 0)
 		heading += 360;

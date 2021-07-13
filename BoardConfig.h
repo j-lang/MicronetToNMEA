@@ -35,11 +35,14 @@
 /*                              Constants                                  */
 /***************************************************************************/
 
-// Use LSM303DLH configuration
+// Use LSM303DLHx configuration
 #define USE_LSM303           1
 #define LSM303DLH_I2C        Wire
+
 //#define LSM303DLH
 #define LSM303DLHC
+
+#define SIMPLE_CALIBRATION   0
 
 // CC1101/SPI pins
 #define CS0_PIN              10

@@ -8,8 +8,6 @@
 #ifndef NAVCOMPASS_H_
 #define NAVCOMPASS_H_
 
-#define Working_with_raw_data
-
 #include <stdint.h>
 #define LSM303DLH_MAG_ADDR  0x1E
 #if defined LSM303DLH
@@ -64,14 +62,6 @@
 #if defined LSM303DLHC
 #define TEMP_OUT_H_M      0x01 // this may conflicting with CRB_REG_M
 #define TEMP_OUT_L_M      0x40 
-#endif
-
-#ifdef Working_with_raw_data
-#define GAUSS_TO_MICROTESLA 1.0F
-#define GRAVITY_STANDARD 1.0F
-#else
-#define GAUSS_TO_MICROTESLA 100.0F
-#define GRAVITY_STANDARD 9.80665F
 #endif
 
 class NavCompass

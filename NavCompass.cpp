@@ -170,7 +170,7 @@ float NavCompass::GetHeading()
 	pBow = mx;
 	pStarboard = (my * ey + mz * ez) / normE;
 
-	float heading = atan2(-pStarboard, pBow) * 180 / M_PI;
+	heading = atan2(-pStarboard, pBow) * 180 / M_PI;
 #elif defined LSM303DLHC
 #if defined SIMPLE_CALIBRATION
 
@@ -179,6 +179,22 @@ float NavCompass::GetHeading()
 	m.y -= (int16_t) gConfiguration.yMagOffset;
 	m.z -= (int16_t) gConfiguration.zMagOffset;
 //Serial.printf("mx %d my %d mz %d\n", m.x, m.y, m.z);
+
+	// Low-Pass filter accelerometer
+	fXa = a.x * alpha + (fXa * (1.0 - alpha));
+	fYa = a.y * alpha + (fYa * (1.0 - alpha));
+	fZa = a.z * alpha + (fZa * (1.0 - alpha));
+	a.x = (int16_t) fXa;
+	a.y = (int16_t) fYa;
+	a.z = (int16_t) fZa;
+
+	// Low-Pass filter magnetometer
+	fXm = m.x * alpha + (fXm * (1.0 - alpha));
+	fYm = m.y * alpha + (fYm * (1.0 - alpha));
+	fZm = m.z * alpha + (fZm * (1.0 - alpha));
+	m.x = (int16_t) fXm;
+	m.y = (int16_t) fYm;
+	m.z = (int16_t) fZm;
 
 	// compute E and N
 	vector<float> E;
@@ -191,7 +207,7 @@ float NavCompass::GetHeading()
 	vector_normalize(&N);
 
 	// compute heading
-	float heading = atan2(vector_dot(&E, &from), vector_dot(&N, &from)) * 180 / PI;
+	heading = atan2(vector_dot(&E, &from), vector_dot(&N, &from)) * 180 / PI;
 #else
 	float pitch, roll, Xa_off, Ya_off, Za_off, Xa_cal, Ya_cal, Za_cal, Xm_off, Ym_off, Zm_off, Xm_cal, Ym_cal, Zm_cal, fXm_comp, fYm_comp;
 

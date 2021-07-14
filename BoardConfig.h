@@ -42,8 +42,6 @@
 //#define LSM303DLH
 #define LSM303DLHC
 
-#define SIMPLE_CALIBRATION   0
-
 // CC1101/SPI pins
 #define CS0_PIN              10
 #define MOSI_PIN             11

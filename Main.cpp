@@ -611,7 +611,7 @@ void MenuConvertToNmea()
 	uint8_t payloadLength;
 #if USE_LSM303
 	uint32_t lastHeadingTime = millis();
-	float filteredHeading = 0, heading;
+	float heading;
 #endif
 
 	if (gConfiguration.networkId == 0)
@@ -721,13 +721,12 @@ void MenuConvertToNmea()
 		{
 			lastHeadingTime = millis();
 			heading = gNavCompass.GetHeading();
-			filteredHeading = 0.7f * filteredHeading + 0.3f * heading;
 //			count++;
 //			if (count % 10 == 0)
 //			{
 //				CONSOLE.println(heading);
 //			}
-			gNavData.hdg_deg.value = filteredHeading;
+			gNavData.hdg_deg.value = heading;
 			gNavData.hdg_deg.valid = true;
 			gNavData.hdg_deg.timeStamp = lastHeadingTime;
 		}

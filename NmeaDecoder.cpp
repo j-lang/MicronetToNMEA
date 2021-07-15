@@ -29,6 +29,7 @@
 /***************************************************************************/
 
 #include "BoardConfig.h"
+#include "Globals.h"
 #include "NmeaDecoder.h"
 
 #include <Arduino.h>
@@ -38,13 +39,62 @@
 /*                              Constants                                  */
 /***************************************************************************/
 
+// Central European Time (Paris, Berlin)
+TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120};     // Central European Summer Time
+TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};       // Central European Standard Time
+Timezone CE(CEST, CET);
+
+// United Kingdom (London, Belfast)
+TimeChangeRule BST = {"BST", Last, Sun, Mar, 1, 60};        // British Summer Time
+TimeChangeRule GMT = {"GMT", Last, Sun, Oct, 2, 0};         // Standard Time
+Timezone UK(BST, GMT);
+
+// US Eastern Time Zone (New York, Detroit)
+TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, -240};  // Eastern Daylight Time = UTC - 4 hours
+TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, -300};   // Eastern Standard Time = UTC - 5 hours
+Timezone usET(usEDT, usEST);
+
+// US Central Time Zone (Chicago, Houston)
+TimeChangeRule usCDT = {"CDT", Second, Sun, Mar, 2, -300};
+TimeChangeRule usCST = {"CST", First, Sun, Nov, 2, -360};
+Timezone usCT(usCDT, usCST);
+
+// US Mountain Time Zone (Denver, Salt Lake City)
+TimeChangeRule usMDT = {"MDT", Second, Sun, Mar, 2, -360};
+TimeChangeRule usMST = {"MST", First, Sun, Nov, 2, -420};
+Timezone usMT(usMDT, usMST);
+
+// Arizona is US Mountain Time Zone but does not use DST
+Timezone usAZ(usMST);
+
+// US Pacific Time Zone (Las Vegas, Los Angeles)
+TimeChangeRule usPDT = {"PDT", Second, Sun, Mar, 2, -420};
+TimeChangeRule usPST = {"PST", First, Sun, Nov, 2, -480};
+Timezone usPT(usPDT, usPST);
+
+// Australia Eastern Time Zone (Sydney, Melbourne)
+TimeChangeRule aEDT = {"AEDT", First, Sun, Oct, 2, 660};    // UTC + 11 hours
+TimeChangeRule aEST = {"AEST", First, Sun, Apr, 3, 600};    // UTC + 10 hours
+Timezone ausET(aEDT, aEST);
+
+// Moscow Standard Time (MSK, does not observe DST)
+TimeChangeRule msk = {"MSK", Last, Sun, Mar, 1, 180};
+Timezone tzMSK(msk);
+
+static const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};
+
 /***************************************************************************/
 /*                                Macros                                   */
 /***************************************************************************/
 
+// leap year calculator expects year argument as years offset from 1970
+#define LEAP_YEAR(Y) ( ((1970+(Y))>0) && !((1970+(Y))%4) && ( ((1970+(Y))%100) || !((1970+(Y))%400) ) ) 
+
 /***************************************************************************/
 /*                             Local types                                 */
 /***************************************************************************/
+
+static tmElements_t tm;
 
 /***************************************************************************/
 /*                           Local prototypes                              */
@@ -224,12 +274,15 @@ void NmeaDecoder::DecodeRMBSentence(char *sentence, NavigationData *navData)
 
 void NmeaDecoder::DecodeRMCSentence(char *sentence, NavigationData *navData)
 {
+	int hr=0, mint=0, sec=0, dy=1, mnth=1, yr=1970;
+	time_t Local_sec=0;
+
+	//Get UTC from NMEA format
 	if (sentence[0] != ',')
 	{
-		navData->time.hour = (sentence[0] - '0') * 10 + (sentence[1] - '0');
-		navData->time.minute = (sentence[2] - '0') * 10 + (sentence[3] - '0');
-		navData->time.valid = true;
-		navData->time.timeStamp = millis();
+		hr = (sentence[0] - '0') * 10 + (sentence[1] - '0');
+		mint = (sentence[2] - '0') * 10 + (sentence[3] - '0');
+		sec = (sentence[4] - '0') * 10 + (sentence[5] - '0');
 	}
 	for (int i = 0; i < 8; i++)
 	{
@@ -239,12 +292,56 @@ void NmeaDecoder::DecodeRMCSentence(char *sentence, NavigationData *navData)
 	}
 	if (sentence[0] != ',')
 	{
-		navData->date.day = (sentence[0] - '0') * 10 + (sentence[1] - '0');
-		navData->date.month = (sentence[2] - '0') * 10 + (sentence[3] - '0');
-		navData->date.year = (sentence[4] - '0') * 10 + (sentence[5] - '0');
-		navData->date.valid = true;
-		navData->date.timeStamp = millis();
+		dy = (sentence[0] - '0') * 10 + (sentence[1] - '0');
+		mnth = (sentence[2] - '0') * 10 + (sentence[3] - '0');
+		yr = (sentence[4] - '0') * 10 + (sentence[5] - '0') + 2000;
 	}
+
+	//Calculate UTC in time_t format
+	time_t UTC_sec = NmeaDecoder::makeUTC_sec(hr, mint, sec, dy, mnth, yr);
+
+	// given a Timezone object and UTC convert to local time with time zone
+	switch(gConfiguration.timezone)
+	{
+	case 1:
+		Local_sec = NmeaDecoder::ConvertTime(CE, UTC_sec);
+		break;
+	case 2:
+		Local_sec = NmeaDecoder::ConvertTime(UK, UTC_sec);
+		break;
+	case 3:
+		Local_sec = NmeaDecoder::ConvertTime(usET, UTC_sec);
+		break;
+	case 4:
+		Local_sec = NmeaDecoder::ConvertTime(usCT, UTC_sec);
+		break;
+	case 5:
+		Local_sec = NmeaDecoder::ConvertTime(usMT, UTC_sec);
+		break;
+	case 6:
+		Local_sec = NmeaDecoder::ConvertTime(usAZ, UTC_sec);
+		break;
+	case 7:
+		Local_sec = NmeaDecoder::ConvertTime(usPT, UTC_sec);
+		break;
+	case 8:
+		Local_sec = NmeaDecoder::ConvertTime(ausET, UTC_sec);
+		break;
+	case 9:
+		Local_sec = NmeaDecoder::ConvertTime(tzMSK, UTC_sec);
+		break;
+	}
+
+	navData->time.hour = hour(Local_sec); 
+	navData->time.minute = minute(Local_sec);
+	navData->date.day = day(Local_sec);
+	navData->date.month = month(Local_sec); 
+	navData->date.year = year(Local_sec) - 2000;
+	navData->time.valid = true;
+	navData->time.timeStamp = millis();
+	navData->date.valid = true;
+	navData->date.timeStamp = millis();
+
 }
 
 void NmeaDecoder::DecodeGGASentence(char *sentence, NavigationData *navData)
@@ -326,4 +423,58 @@ int16_t NmeaDecoder::NibbleValue(char c)
 	}
 
 	return -1;
+}
+
+time_t NmeaDecoder::makeUTC_sec(int hr, int mint, int sec, int dy, int mnth, int yr)
+{
+  int i;
+  uint32_t seconds;
+
+ // year can be given as full four digit year or two digts (2010 or 10 for 2010);  
+ //it is converted to years since 1970
+  if( yr > 99)
+      yr = yr - 1970;
+  else
+      yr += 30;  
+  tm.Year = yr;
+  tm.Month = mnth;
+  tm.Day = dy;
+  tm.Hour = hr;
+  tm.Minute = mint;
+  tm.Second = sec;
+
+// assemble time elements into time_t 
+// note year argument is offset from 1970 (see macros in time.h to convert to other formats)
+// previous version used full four digit year (or digits since 2000),i.e. 2009 was 2009 or 9
+  
+  // seconds from 1970 till 1 jan 00:00:00 of the given year
+  seconds= tm.Year*(SECS_PER_DAY * 365);
+  for (i = 0; i < tm.Year; i++) {
+    if (LEAP_YEAR(i)) {
+      seconds += SECS_PER_DAY;   // add extra days for leap years
+    }
+  }
+  
+  // add days for this year, months start from 1
+  for (i = 1; i < tm.Month; i++) {
+    if ( (i == 2) && LEAP_YEAR(tm.Year)) { 
+      seconds += SECS_PER_DAY * 29;
+    } else {
+      seconds += SECS_PER_DAY * monthDays[i-1];  //monthDay array starts from 0
+    }
+  }
+  seconds += (tm.Day-1) * SECS_PER_DAY;
+  seconds += tm.Hour * SECS_PER_HOUR;
+  seconds += tm.Minute * SECS_PER_MIN;
+  seconds += tm.Second;
+  return (time_t)seconds; 
+}
+
+// given a Timezone object and UTC, convert to local time with time zone
+time_t NmeaDecoder::ConvertTime(Timezone tz, time_t utc)
+{
+    TimeChangeRule *tcr; // pointer to the time change rule, use to get the TZ abbrev
+
+    time_t t = tz.toLocal(utc, &tcr);
+    return t; 
 }

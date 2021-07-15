@@ -33,6 +33,7 @@
 
 #include <stdint.h>
 #include "NavigationData.h"
+#include <Timezone.h>
 
 /***************************************************************************/
 /*                              Constants                                  */
@@ -55,6 +56,8 @@ public:
 	int GetNbSentences();
 	const char *GetSentence(int i);
 	void resetSentences();
+	time_t makeUTC_sec(int hr, int min, int sec, int dy, int mnth, int yr);
+	time_t ConvertTime(Timezone tz, time_t utc);
 
 private:
 	uint8_t serialBuffer[NMEA_SENTENCE_MAX_LENGTH];

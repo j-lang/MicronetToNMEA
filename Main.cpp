@@ -72,6 +72,7 @@ void MenuScanAllMicronetTraffic();
 #if USE_LSM303
 void MenuCalibrateMagnetoMeter();
 #endif
+void MenuChooseTimezone();
 void SaveCalibration();
 void LoadCalibration();
 
@@ -92,6 +93,7 @@ MenuEntry_t mainMenu[] =
 #if USE_LSM303
 { "Calibrate magnetometer", MenuCalibrateMagnetoMeter },
 #endif
+{ "Choose Timezone for your area", MenuChooseTimezone },
 { nullptr, nullptr } };
 
 /***************************************************************************/
@@ -172,7 +174,7 @@ void setup()
 	gRfReceiver.setGDO(GDO0_PIN, GDO2_PIN); // Practicaly, GDO2 pin isn't used. You don't need to wire it
 	gRfReceiver.setCCMode(1); // set config for internal transmission mode.
 	gRfReceiver.setModulation(0); // set modulation mode. 0 = 2-FSK, 1 = GFSK, 2 = ASK/OOK, 3 = 4-FSK, 4 = MSK.
-	gRfReceiver.setMHZ(869.835 - 0.071); // Here you can set your basic frequency. The lib calculates the frequency automatically (default = 433.92).The cc1101 can: 300-348 MHZ, 387-464MHZ and 779-928MHZ. Read More info from datasheet.
+	gRfReceiver.setMHZ(869.835 - 0.079); // Here you can set your basic frequency. The lib calculates the frequency automatically (default = 433.92).The cc1101 can: 300-348 MHZ, 387-464MHZ and 779-928MHZ. Read More info from datasheet.
 	gRfReceiver.setDeviation(34); // Set the Frequency deviation in kHz. Value from 1.58 to 380.85. Default is 47.60 kHz.
 	gRfReceiver.setChannel(0); // Set the Channelnumber from 0 to 255. Default is cahnnel 0.
 	gRfReceiver.setChsp(199.95); // The channel spacing is multiplied by the channel number CHAN and added to the base frequency in kHz. Value from 25.39 to 405.45. Default is 199.95 kHz.
@@ -872,6 +874,62 @@ void MenuCalibrateMagnetoMeter()
 	}
 }
 #endif
+
+void MenuChooseTimezone()
+{
+  char c;
+  bool invalidInput = false;
+  uint8_t tz = 1;
+
+  CONSOLE.println("Press ESC key to come back to menu.");
+  CONSOLE.println("");
+  CONSOLE.println("1 - Central European Time (Berlin, Paris)");
+  CONSOLE.println("2 - United Kingdom (London, Belfast)");
+  CONSOLE.println("3 - US Eastern Time Zone (New York, Detroit)");
+  CONSOLE.println("4 - US Central Time Zone (Chicago, Houston)");
+  CONSOLE.println("5 - US Mountain Time Zone (Denver, Salt Lake City)");
+  CONSOLE.println("6 - Arizona is US Mountain Time Zone but does not use DST");
+  CONSOLE.println("7 - US Pacific Time Zone (Las Vegas, Los Angeles)");
+  CONSOLE.println("8 - Australia Eastern Time Zone (Sydney, Melbourne)");
+  CONSOLE.println("9 - Moscow Standard Time (MSK, does not observe DST)");
+  CONSOLE.println("");
+  CONSOLE.print("Choose the Timezone for your area: ");
+  do
+  {
+    if (CONSOLE.available())
+    {
+      c = CONSOLE.read();
+      if (c == 0x1b)
+      {
+        CONSOLE.println("ESC key pressed, stopping choosing time zone.");
+        break;
+      }
+      if ((c > '0') && (c <= '9'))
+      {
+        tz = c - 48;
+        break;
+      }
+      else
+      {
+        invalidInput = true;
+        break;
+      }
+    };
+  } while (1);
+
+  if (invalidInput)
+  {
+    CONSOLE.println("Invalid Network ID entered, ignoring input.");
+  }
+  else
+  {
+    gConfiguration.timezone = tz;
+    CONSOLE.println("");
+    CONSOLE.print("Timezone saved: ");
+    CONSOLE.println(tz);
+    gConfiguration.SaveToEeprom();
+  }
+}
 
 void SaveCalibration()
 {

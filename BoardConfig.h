@@ -35,12 +35,22 @@
 /*                              Constants                                  */
 /***************************************************************************/
 
+// Use HC-06 Bluetooth Serial interface
+//#define USE_HC06
+
 // Use LSM303DLHx configuration
 #define USE_LSM303           1
 #define LSM303DLH_I2C        Wire
+#define I2C_SDA              18 // default pins
+#define I2C_SCL              19
 
+// Choose your megnetometer breakout board
 //#define LSM303DLH
 #define LSM303DLHC
+// Choose one method for heading calculation
+//#define VECTOR_METHOD
+#define ANGLE_METHOD
+//#define MAGNETO_METHOD
 
 // CC1101/SPI pins
 #define CS0_PIN              10
@@ -67,11 +77,10 @@
 #define USB_CONSOLE  Serial
 #define USB_BAUDRATE 115200
 
-#define USE_HC06 0
 #if USE_HC06
 // Wireless Bluetooth UART params
 #define BLU_CONSOLE  Serial5
-#define BLU_BAUDRATE 115200
+#define BLU_BAUDRATE 38400
 #define BLU_RX_PIN   34
 #define BLU_TX_PIN   33
 #endif

@@ -16,7 +16,6 @@
 #define LSM303DLH_ACC_ADDR  0x19
 #endif
 
-//#define SIMPLE_CALIBRATION
 #define GAUSS_TO_NANOTESLA 100000.0F
 
 #define CTRL_REG1_A       0x20
@@ -73,6 +72,20 @@ private:
 	float heading;
 	float magX, magY, magZ;
 	float accX, accY, accZ;
+#if defined VECTOR_METHOD || defined MAGNETO_METHOD
+  float alpha = 0.15f;
+  float fXa = 0.0f, fYa = 0.0f, fZa = 0.0f, fXm = 0.0f, fYm = 0.0f, fZm = 0.0f;
+#endif
+#ifdef ANGLE_METHOD
+  /* roll pitch and yaw angles computed by iecompass */
+  int16_t iPhi, iThe, iPsi;
+  /* filtered roll pitch and yaw angles computed by iecompass */
+  int16_t iLPPhi, iLPThe, iLPPsi;
+  /* magnetic field readings corrected for hard iron effects and PCB orientation */
+  int16_t iBfx, iBfy, iBfz;
+  /* hard iron estimate */
+  int16_t iVx, iVy, iVz;
+#endif
 
 public:
 	NavCompass();
@@ -85,15 +98,25 @@ public:
 	
 	template <typename T> struct vector
 	{
-	T x, y, z;
+	  T x, y, z;
 	};
 	vector<int16_t> a; // accelerometer readings
 	vector<int16_t> m; // magnetometer readings
 
+#ifdef VECTOR_METHOD
 	// vector functions
 	template <typename Ta, typename Tb, typename To> static void vector_cross(const vector<Ta> *a, const vector<Tb> *b, vector<To> *out);
 	template <typename Ta, typename Tb> static float vector_dot(const vector<Ta> *a, const vector<Tb> *b);
 	static void vector_normalize(vector<float> *a);
+#endif
+#ifdef ANGLE_METHOD
+  void iecompass(int16_t iBpx, int16_t iBpy, int16_t iBpz, int16_t iGpx, int16_t iGpy, int16_t iGpz);
+  int16_t iTrig(int16_t ix, int16_t iy);
+  int16_t iHundredAtan2Deg(int16_t iy, int16_t ix);
+  int16_t iHundredAtanDeg(int16_t iy, int16_t ix);
+  int16_t iDivide(int16_t iy, int16_t ix);
+  int16_t iFilter(uint8_t aswitch, int16_t iAng, int16_t iLPAng);
+#endif
 
 private:
 	unsigned char I2CRead(uint8_t i2cAddress, uint8_t address);
@@ -101,6 +124,7 @@ private:
 	void I2CWrite(uint8_t i2cAddress, uint8_t data, uint8_t address);
 };
 
+#ifdef VECTOR_METHOD
 template <typename Ta, typename Tb, typename To> void NavCompass::vector_cross(const vector<Ta> *a, const vector<Tb> *b, vector<To> *out)
 {
 	out->x = (a->y * b->z) - (a->z * b->y);
@@ -112,5 +136,6 @@ template <typename Ta, typename Tb> float NavCompass::vector_dot(const vector<Ta
 {
 	return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
 }
+#endif
 
 #endif /* NAVCOMPASS_H_ */

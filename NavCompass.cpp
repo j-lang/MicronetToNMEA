@@ -197,10 +197,9 @@ float NavCompass::GetHeading()
 	iLPThe = iFilter(1, iThe, iLPThe);
 	iLPPhi = iFilter(0, iPhi, iLPPhi);
 	iLPPsi = iFilter(0, iPsi, iLPPsi);
-//Serial.printf("iPsi %d iLPPsi %d\n", iPsi, iLPPsi);
 
-	heading = (float) iLPPsi/100;
-//Serial.printf("Pitch (X): %d Roll (Y): %d Heading (Z): %d\n", iLPThe/100, iLPPhi/100, iLPPsi/100);
+	heading = (float) -iPsi/100; // seems we haven't NED
+//Serial.printf("Pitch (X): %d Roll (Y): %d Heading (Z): %d\n", iLPThe/100, iLPPhi/100, -iLPPsi/100);
 
 #elif defined MAGNETO_METHOD
 	float pitch, roll, Xa_off, Ya_off, Za_off, Xa_cal, Ya_cal, Za_cal, Xm_off, Ym_off, Zm_off, Xm_cal, Ym_cal, Zm_cal, fXm_comp, fYm_comp;

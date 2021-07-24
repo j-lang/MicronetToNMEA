@@ -67,7 +67,6 @@ public:
 	float xMagOffset;
 	float yMagOffset;
 	float zMagOffset;
-	uint8_t timezone;
 };
 
 /***************************************************************************/

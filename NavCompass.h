@@ -16,7 +16,7 @@
 #define LSM303DLH_ACC_ADDR  0x19
 #endif
 
-#define GAUSS_TO_NANOTESLA 100000.0F
+#define GAUSS_TO_NANOTESLA 100000.0f
 
 #define CTRL_REG1_A       0x20
 #define CTRL_REG2_A       0x21

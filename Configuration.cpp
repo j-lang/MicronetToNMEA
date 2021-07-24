@@ -61,7 +61,6 @@ typedef struct
 	float xMagOffset;
 	float yMagOffset;
 	float zMagOffset;
-	uint8_t timezone;
 	uint8_t checksum;
 } ConfigBlock_t;
 #pragma pack()
@@ -94,7 +93,6 @@ Configuration::Configuration()
 	xMagOffset = 0;
 	yMagOffset = 0;
 	zMagOffset = 0;
-	timezone = 1;
 }
 
 Configuration::~Configuration()
@@ -132,7 +130,6 @@ void Configuration::LoadFromEeprom()
 			xMagOffset = configBlock.xMagOffset;
 			yMagOffset = configBlock.yMagOffset;
 			zMagOffset = configBlock.zMagOffset;
-			timezone = configBlock.timezone;
 		}
 	}
 }
@@ -161,7 +158,6 @@ void Configuration::SaveToEeprom()
 	configBlock.xMagOffset = xMagOffset;
 	configBlock.yMagOffset = yMagOffset;
 	configBlock.zMagOffset = zMagOffset;
-	configBlock.timezone = timezone;
 
 	for (uint32_t i = 0; i < sizeof(ConfigBlock_t) - 1; i++)
 	{

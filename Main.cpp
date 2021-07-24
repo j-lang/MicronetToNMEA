@@ -72,7 +72,6 @@ void MenuScanAllMicronetTraffic();
 #if USE_LSM303
 void MenuCalibrateMagnetoMeter();
 #endif
-void MenuChooseTimezone();
 void SaveCalibration();
 void LoadCalibration();
 
@@ -93,7 +92,6 @@ MenuEntry_t mainMenu[] =
 #if USE_LSM303
 { "Calibrate magnetometer", MenuCalibrateMagnetoMeter },
 #endif
-{ "Choose Timezone for your area", MenuChooseTimezone },
 { nullptr, nullptr } };
 
 /***************************************************************************/
@@ -874,62 +872,6 @@ void MenuCalibrateMagnetoMeter()
 	}
 }
 #endif
-
-void MenuChooseTimezone()
-{
-  char c;
-  bool invalidInput = false;
-  uint8_t tz = 1;
-
-  CONSOLE.println("Press ESC key to come back to menu.");
-  CONSOLE.println("");
-  CONSOLE.println("1 - Central European Time (Berlin, Paris)");
-  CONSOLE.println("2 - United Kingdom (London, Belfast)");
-  CONSOLE.println("3 - US Eastern Time Zone (New York, Detroit)");
-  CONSOLE.println("4 - US Central Time Zone (Chicago, Houston)");
-  CONSOLE.println("5 - US Mountain Time Zone (Denver, Salt Lake City)");
-  CONSOLE.println("6 - Arizona is US Mountain Time Zone but does not use DST");
-  CONSOLE.println("7 - US Pacific Time Zone (Las Vegas, Los Angeles)");
-  CONSOLE.println("8 - Australia Eastern Time Zone (Sydney, Melbourne)");
-  CONSOLE.println("9 - Moscow Standard Time (MSK, does not observe DST)");
-  CONSOLE.println("");
-  CONSOLE.print("Choose the Timezone for your area: ");
-  do
-  {
-    if (CONSOLE.available())
-    {
-      c = CONSOLE.read();
-      if (c == 0x1b)
-      {
-        CONSOLE.println("ESC key pressed, stopping choosing time zone.");
-        break;
-      }
-      if ((c > '0') && (c <= '9'))
-      {
-        tz = c - 48;
-        break;
-      }
-      else
-      {
-        invalidInput = true;
-        break;
-      }
-    };
-  } while (1);
-
-  if (invalidInput)
-  {
-    CONSOLE.println("Invalid Network ID entered, ignoring input.");
-  }
-  else
-  {
-    gConfiguration.timezone = tz;
-    CONSOLE.println("");
-    CONSOLE.print("Timezone saved: ");
-    CONSOLE.println(tz);
-    gConfiguration.SaveToEeprom();
-  }
-}
 
 void SaveCalibration()
 {

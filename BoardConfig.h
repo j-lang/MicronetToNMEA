@@ -44,7 +44,7 @@
 #define I2C_SDA              18 // default pins
 #define I2C_SCL              19
 
-// Choose your megnetometer breakout board
+// Choose your magnetometer breakout board
 //#define LSM303DLH
 #define LSM303DLHC
 // Choose one method for heading calculation

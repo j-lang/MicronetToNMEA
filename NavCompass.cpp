@@ -231,13 +231,13 @@ float NavCompass::GetHeading()
 	fZm = Zm_cal * alpha + (fZm * (1.0f - alpha));
 
 	// Pitch and roll
-	roll  = atan2(fYa, sqrt(fXa*fXa + fZa*fZa));
-	pitch = atan2(fXa, sqrt(fYa*fYa + fZa*fZa));
+  roll  = atan2(fYa, fZa);
+  pitch = atan2(-fXa, sqrt(fYa*fYa + fZa*fZa));
 //Serial.printf("Pitch (X): %f Roll (Y): %f\n", pitch*180.0/M_PI, roll*180.0/M_PI);
 
 	// Tilt compensated magnetic sensor measurements
-	fXm_comp = fXm*cos(pitch)+fZm*sin(pitch);
-	fYm_comp = fXm*sin(roll)*sin(pitch)+fYm*cos(roll)-fZm*sin(roll)*cos(pitch);
+  fXm_comp = fXm*cos(pitch)+fYm*sin(roll)*sin(pitch)+fZm*cos(roll)*sin(pitch);
+  fYm_comp = fYm*cos(roll)-fZm*sin(roll);
 
 	// Arctangent of y/x
 	heading = (atan2(fYm_comp,fXm_comp)*180.0f)/M_PI;

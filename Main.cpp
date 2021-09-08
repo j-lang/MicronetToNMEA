@@ -168,11 +168,12 @@ void setup()
 #endif
 
 	// Configure CC1101 for listening Micronet devices
+	ELECHOUSE_cc1101.setClb(3,21,24); // Calibration coefficients 799-869MHz range
 	gRfReceiver.Init();
 	gRfReceiver.setGDO(GDO0_PIN, GDO2_PIN); // Practicaly, GDO2 pin isn't used. You don't need to wire it
 	gRfReceiver.setCCMode(1); // set config for internal transmission mode.
 	gRfReceiver.setModulation(0); // set modulation mode. 0 = 2-FSK, 1 = GFSK, 2 = ASK/OOK, 3 = 4-FSK, 4 = MSK.
-	gRfReceiver.setMHZ(869.835 - 0.079); // Here you can set your basic frequency. The lib calculates the frequency automatically (default = 433.92).The cc1101 can: 300-348 MHZ, 387-464MHZ and 779-928MHZ. Read More info from datasheet.
+	gRfReceiver.setMHZ(869.835); // Here you can set your basic frequency. The lib calculates the frequency automatically (default = 433.92).The cc1101 can: 300-348 MHZ, 387-464MHZ and 779-928MHZ. Read More info from datasheet.
 	gRfReceiver.setDeviation(34); // Set the Frequency deviation in kHz. Value from 1.58 to 380.85. Default is 47.60 kHz.
 	gRfReceiver.setChannel(0); // Set the Channelnumber from 0 to 255. Default is cahnnel 0.
 	gRfReceiver.setChsp(199.95); // The channel spacing is multiplied by the channel number CHAN and added to the base frequency in kHz. Value from 25.39 to 405.45. Default is 199.95 kHz.

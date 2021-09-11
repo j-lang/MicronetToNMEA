@@ -58,7 +58,7 @@
 #define MISO_PIN             12
 #define SCK_PIN              14
 #define GDO0_PIN             24
-#define GDO2_PIN             25 // not used
+#define GDO2_PIN             25
 
 // ERROR LED pin
 #define LED_PIN              LED_BUILTIN
@@ -80,7 +80,7 @@
 #if USE_HC06
 // Wireless Bluetooth UART params
 #define BLU_CONSOLE  Serial5
-#define BLU_BAUDRATE 38400
+#define BLU_BAUDRATE 115200
 #define BLU_RX_PIN   34
 #define BLU_TX_PIN   33
 #endif

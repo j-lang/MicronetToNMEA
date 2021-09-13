@@ -41,14 +41,14 @@ bool NavCompass::Init()
 //	I2CWrite(LSM303DLH_MAG_ADDR, 0x0C, CRA_REG_M); // 0x0C=0b00001100 ODR 7.5Hz
 //	I2CWrite(LSM303DLH_MAG_ADDR, 0x10, CRA_REG_M); // 0x10=0b00010000 ODR 15Hz
 //	I2CWrite(LSM303DLH_MAG_ADDR, 0x14, CRA_REG_M); // 0x14=0b00010100 ODR 30Hz
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x18, CRA_REG_M); // 0x18=0b00011000 ODR 75Hz
 #if defined LSM303DLH
 	// DLH Acceleration register
 	I2CWrite(LSM303DLH_ACC_ADDR, 0x27, CTRL_REG1_A); // 0x27=0b00100111 Normal Mode, ODR 50hz, all axes on
 	I2CWrite(LSM303DLH_ACC_ADDR, 0x00, CTRL_REG4_A); // 0x00=0b00000000 Range: +/-2 Gal, Sens.: 1mGal/LSB
 	mGal_per_LSB = 1.0;
 	// DLH Magnetic register
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Range: +/-2.5 Gauss gain: 635LSB/Gauss
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x18, CRA_REG_M); // 0x18=0b00011000 ODR 75Hz
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M); // 0x60=0b01100000 Range: +/-2.5 Gauss gain: 635LSB/Gauss
 	LSB_per_Gauss_XY = 635;
 	LSB_per_Gauss_Z = 570;
 #elif defined LSM303DLHC
@@ -63,14 +63,15 @@ bool NavCompass::Init()
 //	I2CWrite(LSM303DLH_ACC_ADDR, 0x28, CTRL_REG4_A); // 0x28=0b00101000 Range: +/-8 Gal, Sens.: 4mGal/LSB, highRes on
 //	mGal_per_LSB = 4.0;
 	// DLHC Magnetic register
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x20, CRB_REG_M);   // 0x20=0b00100000 Range: +/-1.3 Gauss gain: 1100LSB/Gauss
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x98, CRA_REG_M); // 0x18=0b10011000 ODR 75Hz, temperature sensor
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x20, CRB_REG_M); // 0x20=0b00100000 Range: +/-1.3 Gauss gain: 1100LSB/Gauss
 	LSB_per_Gauss_XY = 1100;
 	LSB_per_Gauss_Z = 980;
-//	I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M);   // 0x60=0b01100000 Range: +/-2.5 Gauss gain: 670LSB/Gauss
+//	I2CWrite(LSM303DLH_MAG_ADDR, 0x60, CRB_REG_M); // 0x60=0b01100000 Range: +/-2.5 Gauss gain: 670LSB/Gauss
 //	LSB_per_Gauss_XY = 670;
 //	LSB_per_Gauss_Z = 600;
 #endif
-	I2CWrite(LSM303DLH_MAG_ADDR, 0x00, MR_REG_M);    // Continuous mode
+	I2CWrite(LSM303DLH_MAG_ADDR, 0x00, MR_REG_M); // Continuous mode
 
 	return true;
 }
@@ -239,8 +240,8 @@ float NavCompass::GetHeading()
 	fZm = Zm_cal * alpha + (fZm * (1.0f - alpha));
 
 	// Pitch and roll
-  roll  = atan2(fYa, fZa);
-  pitch = atan2(-fXa, sqrt(fYa*fYa + fZa*fZa));
+	roll  = atan2(fYa, fZa);
+	pitch = atan2(-fXa, sqrt(fYa*fYa + fZa*fZa));
 //Serial.printf("Pitch (X): %f Roll (Y): %f\n", pitch*180.0/M_PI, roll*180.0/M_PI);
 
 	// Tilt compensated magnetic sensor measurements
@@ -256,6 +257,19 @@ float NavCompass::GetHeading()
 //Serial.print("Heading: "); Serial.println(heading);
 	return heading;
 }
+
+#if defined LSM303DLHC
+float NavCompass::GetTemperature()
+{
+	uint8_t tl = I2CRead(LSM303DLH_MAG_ADDR, TEMP_OUT_L_M);
+	uint8_t th = I2CRead(LSM303DLH_MAG_ADDR, TEMP_OUT_H_M);
+	int16_t temperature_raw = (int16_t)(th << 8 | tl);
+	if (temperature_raw > 32767) // 2's complement
+		temperature_raw -= 65536;
+	float temperature = 20.0f + (float) (temperature_raw >> 4) / 8.0f;
+	return temperature;
+}
+#endif
 
 unsigned char NavCompass::I2CRead(uint8_t i2cAddress, uint8_t address)
 {
@@ -530,7 +544,7 @@ int16_t NavCompass::iFilter(uint8_t aswitch, int16_t iAng, int16_t iLPAng)
 	}
 	/* store the correctly bounded low pass filtered angle */
 	iLPAng = (int16_t)tmpAngle;
-  return (iLPAng);
+	return (iLPAng);
 }
 
 #endif

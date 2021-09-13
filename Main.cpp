@@ -462,6 +462,11 @@ void MenuAbout()
 	CONSOLE.print(gConfiguration.yMagOffset);
 	CONSOLE.print(" ");
 	CONSOLE.println(gConfiguration.zMagOffset);
+#if defined LSM303DLHC
+	CONSOLE.print("Magnetometer temperature : ");
+	CONSOLE.print(gNavCompass.GetTemperature());
+	CONSOLE.println(" °C");
+#endif
 #endif
 	CONSOLE.println("Provides the following NMEA sentences :");
 	CONSOLE.println(" - INDPT (Depth below transducer. T121 with depth sounder required)");

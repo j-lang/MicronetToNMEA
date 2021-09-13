@@ -62,8 +62,8 @@
 #define IRB_REG_M         0x0b
 #define IRC_REG_M         0x0c
 #if defined LSM303DLHC
-#define TEMP_OUT_H_M      0x01 // this may conflicting with CRB_REG_M
-#define TEMP_OUT_L_M      0x40 
+#define TEMP_OUT_H_M      0x31
+#define TEMP_OUT_L_M      0x32 
 #endif
 
 class NavCompass

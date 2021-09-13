@@ -83,13 +83,13 @@ void NavCompass::GetMagneticField(float *magX, float *magY, float *magZ)
 	I2CBurstRead(LSM303DLH_MAG_ADDR, OUT_X_H_M, magBuffer, 6);
 
 #if defined LSM303DLH
-	mx = ((int16_t) (magBuffer[0] << 8)) | magBuffer[1];
-	my = ((int16_t) (magBuffer[2] << 8)) | magBuffer[3];
-	mz = ((int16_t) (magBuffer[4] << 8)) | magBuffer[5];
+	mx = (int16_t) ((magBuffer[0] << 8) | magBuffer[1]);
+	my = (int16_t) ((magBuffer[2] << 8) | magBuffer[3]);
+	mz = (int16_t) ((magBuffer[4] << 8) | magBuffer[5]);
 #elif defined LSM303DLHC
-	mx = ((int16_t) (magBuffer[0] << 8)) | magBuffer[1];
-	mz = ((int16_t) (magBuffer[2] << 8)) | magBuffer[3]; // stupid change in order for DLHC
-	my = ((int16_t) (magBuffer[4] << 8)) | magBuffer[5];
+	mx = (int16_t) ((magBuffer[0] << 8) | magBuffer[1]);
+	mz = (int16_t) ((magBuffer[2] << 8) | magBuffer[3]); // stupid change in order for DLHC
+	my = (int16_t) ((magBuffer[4] << 8) | magBuffer[5]);
 #endif
 
 	*magX = (float) mx;
@@ -142,6 +142,9 @@ float NavCompass::GetHeading()
 //Serial.printf("mx %f my %f mz %f\n", mx, my, mz);
 
 #if defined VECTOR_METHOD
+// Adopted from:
+// https://github.com/pololu/lsm303-arduino
+
 	// subtract offset (average of min and max) from magnetometer readings
 	m.x -= (int16_t) gConfiguration.xMagOffset;
 	m.y -= (int16_t) gConfiguration.yMagOffset;
@@ -177,7 +180,9 @@ float NavCompass::GetHeading()
 	// compute heading
 	heading = atan2(vector_dot(&E, &from), vector_dot(&N, &from)) * 180.0f / PI;
 #elif defined ANGLE_METHOD
-
+// Adopted from: 
+// "Implementing a Tilt-Compensated eCompass using Accelerometer and Magnetometer Sensors"
+// Freescale AN4248
 	/* tilt-compensated e-Compass code */
 	// boost the readings more to the max. range to reduce quantization noise in the mathematical routines
 	// we have only 12bit data - so multiply with 8
@@ -202,6 +207,9 @@ float NavCompass::GetHeading()
 //Serial.printf("Pitch (X): %d Roll (Y): %d Heading (Z): %d\n", iLPThe/100, iLPPhi/100, -iLPPsi/100);
 
 #elif defined MAGNETO_METHOD
+// Adopted from:
+// https://forum.arduino.cc/t/lsm303dlhc-calibration-pitch-roll-and-tilt-compensated-heading/256406
+
 	float pitch, roll, Xa_off, Ya_off, Za_off, Xa_cal, Ya_cal, Za_cal, Xm_off, Ym_off, Zm_off, Xm_cal, Ym_cal, Zm_cal, fXm_comp, fYm_comp;
 
 	// Accelerometer calibration made in mGal

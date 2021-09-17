@@ -45,11 +45,10 @@
 #define I2C_SCL              19
 
 // Choose your magnetometer breakout board
-//#define LSM303DLH
 #define LSM303DLHC
 // Choose one method for heading calculation
-//#define VECTOR_METHOD
-#define ANGLE_METHOD
+#define VECTOR_METHOD
+//#define ANGLE_METHOD
 //#define MAGNETO_METHOD
 
 // CC1101/SPI pins

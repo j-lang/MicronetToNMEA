@@ -111,77 +111,75 @@ float NavCompass::GetHeading()
 	GetMagneticField(&mx, &my, &mz);
 //Serial.printf("mx %f my %f mz %f\n", mx, my, mz);
 
-#if defined VECTOR_METHOD
-// Adopted from:
-// https://github.com/pololu/lsm303-arduino
-
-	vector<float> from = {1.0f, 0.0f, 0.0f}; // x axis is reference direction
-	// subtract offset (average of min and max) from magnetometer readings
-	mx -= gConfiguration.xMagOffset;
-	my -= gConfiguration.yMagOffset;
-	mz -= gConfiguration.zMagOffset;
-//Serial.printf("mx %f my %f mz %f\n", mx, my, mz);
-
 #define WITH_LP_FILTER
 #ifdef WITH_LP_FILTER
 	// Low-Pass filter accelerometer
 	fXa = ax * alpha + fXa * (1.0f - alpha);
 	fYa = ay * alpha + fYa * (1.0f - alpha);
 	fZa = az * alpha + fZa * (1.0f - alpha);
-	a.x = fXa;
-	a.y = fYa;
-	a.z = fZa;
-#else
-	a.x = ax;
-	a.y = ay;
-	a.z = az;
-#endif
-#ifdef WITH_LP_FILTER
+	ax = fXa;
+	ay = fYa;
+	az = fZa;
 	// Low-Pass filter magnetometer
 	fXm = mx * alpha + fXm * (1.0f - alpha);
 	fYm = my * alpha + fYm * (1.0f - alpha);
 	fZm = mz * alpha + fZm * (1.0f - alpha);
-	m.x = fXm/LSB_per_Gauss_XY*GAUSS_TO_MICROTESLA;
-	m.y = fYm/LSB_per_Gauss_XY*GAUSS_TO_MICROTESLA;
-	m.z = fZm/LSB_per_Gauss_Z*GAUSS_TO_MICROTESLA;
+	mx = fXm;
+	my = fYm;
+	mz = fZm;
+#endif
 //Serial.printf("%d mx %f my %f mz %f\n", millis(), m.x, m.y, m.z);
-#else
+
+#if defined VECTOR_METHOD
+// Adopted from:
+// https://github.com/pololu/lsm303-arduino
+
+	// subtract offset (average of min and max) from magnetometer readings
+	mx -= gConfiguration.xMagOffset;
+	my -= gConfiguration.yMagOffset;
+	mz -= gConfiguration.zMagOffset;
+//Serial.printf("mx %f my %f mz %f\n", mx, my, mz);
+
+	vector<float> from = {1.0f, 0.0f, 0.0f}; // x axis is reference direction
+	a.x = ax*mGal_per_LSB;
+	a.y = ay*mGal_per_LSB;
+	a.z = az*mGal_per_LSB;
 	m.x = mx/LSB_per_Gauss_XY*GAUSS_TO_MICROTESLA;
 	m.y = my/LSB_per_Gauss_XY*GAUSS_TO_MICROTESLA;
 	m.z = mz/LSB_per_Gauss_Z*GAUSS_TO_MICROTESLA;
-#endif
 
-	vector<float> temp_a = a;
 	// normalize
-	vector_normalize(&temp_a);
-	//vector_normalize(&m);
+	vector_normalize(&a);
+	vector_normalize(&m);
 
 	// compute E and N
 	vector<float> E;
 	vector<float> N;
 	// D X M = E, cross acceleration vector Down with M (magnetic north + inclination) to produce "East"
-	vector_cross(&m, &temp_a, &E);
+	vector_cross(&m, &a, &E);
 	vector_normalize(&E);
 	// E X D = N, cross "East" with "Down" to produce "North" (parallel to the ground)
-	vector_cross(&temp_a, &E, &N);
+	vector_cross(&a, &E, &N);
 	vector_normalize(&N);
 
 	// compute heading
 	heading = atan2(vector_dot(&E, &from), vector_dot(&N, &from)) * 180.0f / PI;
 #elif defined ANGLE_METHOD
+/* tilt-compensated e-Compass code */
 // Adopted from:
 // "Implementing a Tilt-Compensated eCompass using Accelerometer and Magnetometer Sensors"
 // Freescale AN4248
 
 	int16_t imx, imy, imz;
 	int16_t iax, iay, iaz;
-	/* tilt-compensated e-Compass code */
+
 	// boost the readings more to the max. range to reduce quantization noise in the mathematical routines
 	// we have only 12bit data - so multiply with 8
 	// subtract offset (average of min and max) from magnetometer readings
-	iVx = (int16_t) 8.0f * gConfiguration.xMagOffset;
-	iVy = (int16_t) 8.0f * gConfiguration.yMagOffset;
-	iVz = (int16_t) 8.0f * gConfiguration.zMagOffset;
+	iVx = 8 * (int16_t) gConfiguration.xMagOffset;
+	iVy = 8 * (int16_t) gConfiguration.yMagOffset;
+	iVz = 8 * (int16_t) gConfiguration.zMagOffset;
+	// working without scaling
 	imx = 8 * (int16_t) mx;
 	imy = 8 * (int16_t) my;
 	imz = 8 * (int16_t) mz;
@@ -219,16 +217,6 @@ float NavCompass::GetHeading()
 	Xm_cal =  1.023288f*Xm_off + 0.006969f*Ym_off + 0.012757f*Zm_off; //X-axis correction for combined scale factors (Default: positive factors)
 	Ym_cal =  0.006969f*Xm_off + 0.950484f*Ym_off + 0.026035f*Zm_off; //Y-axis correction for combined scale factors
 	Zm_cal =  0.012757f*Xm_off + 0.026035f*Ym_off + 0.988869f*Zm_off; //Z-axis correction for combined scale factors
-
-	// Low-Pass filter accelerometer
-	fXa = Xa_cal * alpha + (fXa * (1.0f - alpha));
-	fYa = Ya_cal * alpha + (fYa * (1.0f - alpha));
-	fZa = Za_cal * alpha + (fZa * (1.0f - alpha));
-
-	// Low-Pass filter magnetometer
-	fXm = Xm_cal * alpha + (fXm * (1.0f - alpha));
-	fYm = Ym_cal * alpha + (fYm * (1.0f - alpha));
-	fZm = Zm_cal * alpha + (fZm * (1.0f - alpha));
 
 	// Pitch and roll
 	roll  = atan2(fYa, fZa);

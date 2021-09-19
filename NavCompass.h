@@ -61,10 +61,8 @@ private:
 	float heading;
 	float magX, magY, magZ;
 	float accX, accY, accZ;
-#if defined VECTOR_METHOD || defined MAGNETO_METHOD
 	float alpha = 0.15f;
 	float fXa = 0.0f, fYa = 0.0f, fZa = 0.0f, fXm = 0.0f, fYm = 0.0f, fZm = 0.0f;
-#endif
 #ifdef ANGLE_METHOD
 	/* roll pitch and yaw angles computed by iecompass */
 	int16_t iPhi, iThe, iPsi;

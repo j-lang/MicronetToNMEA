@@ -40,7 +40,7 @@
 
 #include <Arduino.h>
 #include <SPI.h>
-#include <wiring.h>
+#include <Wire.h>
 #include <ELECHOUSE_CC1101_SRC_DRV.h>
 
 /***************************************************************************/
@@ -95,12 +95,12 @@ MenuEntry_t mainMenu[] =
 
 void setup()
 {
+	// Init USB serial link
+	USB_CONSOLE.begin(USB_BAUDRATE);
+
 	// Load configuration from EEPROM
 	gConfiguration.LoadFromEeprom();
 	LoadCalibration();
-
-	// Init USB serial link
-	USB_CONSOLE.begin(USB_BAUDRATE);
 
 	// Init GNSS NMEA serial link
 	GNSS_SERIAL.setRX(GNSS_RX_PIN);
@@ -331,6 +331,11 @@ void MenuAbout()
 		CONSOLE.print(gConfiguration.yMagOffset);
 		CONSOLE.print(" ");
 		CONSOLE.println(gConfiguration.zMagOffset);
+#if defined LSM303DLHC
+		CONSOLE.print("Magnetometer temperature : ");
+		CONSOLE.print(gNavCompass.GetTemperature());
+		CONSOLE.println(" °C");
+#endif
 	}
 	CONSOLE.println("Provides the following NMEA sentences :");
 	CONSOLE.println(" - INDPT (Depth below transducer. T121 with depth sounder required)");

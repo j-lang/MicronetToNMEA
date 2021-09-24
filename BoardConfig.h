@@ -36,17 +36,20 @@
 /***************************************************************************/
 
 // Selects on which I2C bus is connected compass as per Wiring library definition
-#define NAVCOMPASS_I2C Wire1
+#define NAVCOMPASS_I2C Wire
+
+// Choose your magnetometer breakout board
+#define LSM303DLHC
 
 // CC1101/SPI pins
-#define CS0_PIN  10
-#define MOSI_PIN 11
-#define MISO_PIN 12
-#define SCK_PIN  14
-#define GDO0_PIN 24
+#define CS0_PIN              10
+#define MOSI_PIN             11
+#define MISO_PIN             12
+#define SCK_PIN              14
+#define GDO0_PIN             24
 
 // ERROR LED pin
-#define LED_PIN LED_BUILTIN
+#define LED_PIN              LED_BUILTIN
 
 // NMEA/GNSS UART pins
 #define GNSS_SERIAL   Serial1
@@ -66,9 +69,9 @@
 #define WIRED_TX_PIN   33
 
 // The console to use for menu and NMEA output
-#define CONSOLE  USB_CONSOLE
+#define CONSOLE USB_CONSOLE
 #define NMEA_OUT USB_CONSOLE
-#define NMEA_IN  USB_CONSOLE
+#define NMEA_IN USB_CONSOLE
 
 /***************************************************************************/
 /*                                Types                                    */

@@ -142,29 +142,26 @@ void NmeaDecoder::DecodeSentence(int sentenceIndex, NavigationData *navData)
 	if (crc != Cs)
 		return;
 
-	uint32_t sId = ((uint8_t) sentenceBuffer[sentenceIndex][3]) << 16;
-	sId |= ((uint8_t) sentenceBuffer[sentenceIndex][4]) << 8;
-	sId |= ((uint8_t) sentenceBuffer[sentenceIndex][5]);
-
+	char sId[3];
+	sId[0] = sentenceBuffer[sentenceIndex][3];
+	sId[1] = sentenceBuffer[sentenceIndex][4];
+	sId[2] = sentenceBuffer[sentenceIndex][5];
 	char *pField = sentenceBuffer[sentenceIndex] + 7;
-	switch (sId)
+	if (strncmp(sId, "RMB", 3) == 0)
 	{
-	case 0x524D42:
-		// RMB sentence
 		DecodeRMBSentence(pField, navData);
-		break;
-	case 0x524D43:
-		// RMC sentence
+	}
+	else if (strncmp(sId, "RMC", 3) == 0)
+	{
 		DecodeRMCSentence(pField, navData);
-		break;
-	case 0x474741:
-		// GGA sentence
+	}
+	else if (strncmp(sId, "GGA", 3) == 0)
+	{
 		DecodeGGASentence(pField, navData);
-		break;
-	case 0x565447:
-		// VTG sentence
+	}
+	else if (strncmp(sId, "VTG", 3) == 0)
+	{
 		DecodeVTGSentence(pField, navData);
-		break;
 	}
 
 	return;

@@ -5,9 +5,9 @@
  *      Author: Ronan
  */
 
-#include "NavCompass.h"
 #include "BoardConfig.h"
 #include "Globals.h"
+#include "NavCompass.h"
 #include "LSM303DLHDriver.h"
 #include "LSM303DLHCDriver.h"
 
@@ -57,72 +57,101 @@ string NavCompass::GetDeviceName()
 
 float NavCompass::GetHeading()
 {
-	float magX, magY, magZ;
-	float accelX, accelY, accelZ;
-	float starboardY, starboardZ;
-	float starboardNorm;
-	float pStarboard;
-	float bowX, bowY, bowZ;
-	float bowNorm;
-	float pBow;
-
+	float mx, my, mz;
+	float ax, ay, az;
 	// Get Acceleration and Magnetic data from LSM303
-	// Note that we don't care about units of both acceleration and magnetic field since we
-	// are only calculating angles.
-	navCompassDriver->GetAcceleration(&accelX, &accelY, &accelZ);
-	navCompassDriver->GetMagneticField(&magX, &magY, &magZ);
+	navCompassDriver->GetAcceleration(&ax, &ay, &az);
+//Serial.printf("ax %f ay %f az %f\n", ax, ay, az);
+	navCompassDriver->GetMagneticField(&mx, &my, &mz);
+//Serial.printf("1 mx %f my %f mz %f\n", mx, my, mz);
 
-	// Substract calibration offsets from magnetic readings
-	magX -= gConfiguration.xMagOffset;
-	magY -= gConfiguration.yMagOffset;
-	magZ -= gConfiguration.zMagOffset;
+#define WITH_LP_FILTER
+#ifdef WITH_LP_FILTER
+	// Low-Pass filter accelerometer
+	fXa = ax * alpha + fXa * (1.0f - alpha);
+	fYa = ay * alpha + fYa * (1.0f - alpha);
+	fZa = az * alpha + fZa * (1.0f - alpha);
+	ax = fXa;
+	ay = fYa;
+	az = fZa;
+	// Low-Pass filter magnetometer
+	fXm = mx * alpha + fXm * (1.0f - alpha);
+	fYm = my * alpha + fYm * (1.0f - alpha);
+	fZm = mz * alpha + fZm * (1.0f - alpha);
+	mx = fXm;
+	my = fYm;
+	mz = fZm;
+#endif
+//Serial.printf("2 mx %f my %f mz %f\n", mx, my, mz);
 
-	// Build starboard axis from Nav Compass X axis & gravity vector
-	starboardY = accelZ;
-	starboardZ = -accelY;
-	starboardNorm = sqrtf(starboardY * starboardY + starboardZ * starboardZ);
+// Adopted from:
+// https://github.com/pololu/lsm303-arduino
 
-	// Build starboard axis from starboard axis & gravity vector
-	bowX = (accelY * accelY) + (accelZ * accelZ);
-	bowY = -accelX * accelY;
-	bowZ = -accelX * accelZ;
-	bowNorm = sqrtf(bowX * bowX + bowY * bowY + bowZ * bowZ);
+	// subtract offset (average of min and max) from magnetometer readings
+	mx -= gConfiguration.xMagOffset;
+	my -= gConfiguration.yMagOffset;
+	mz -= gConfiguration.zMagOffset;
+//Serial.printf("3 mx %f my %f mz %f\n", mx, my, mz);
 
-	// Project magnetic field on bow & starboard axis
-	pBow = (magX * bowX + magY * bowY + magZ * bowZ) / bowNorm;
-	pStarboard = (magY * starboardY + magZ * starboardZ) / starboardNorm;
+	vector<float> from = {1.0f, 0.0f, 0.0f}; // x axis is reference direction
+	a.x = ax;
+	a.y = ay;
+	a.z = az;
+	m.x = mx;
+	m.y = my;
+	m.z = mz;
 
-	float angle = atan2(-pStarboard, pBow) * 180 / M_PI;
-	if (angle < 0)
-		angle += 360;
+	// normalize
+	vector_normalize(&a);
+	vector_normalize(&m);
 
-	headingHistory[headingIndex++] = angle;
-	if (headingIndex >= HEADING_HISTORY_LENGTH)
-	{
-		headingIndex = 0;
-	}
+	// compute E and N
+	vector<float> E;
+	vector<float> N;
+	// D X M = E, cross acceleration vector Down with M (magnetic north + inclination) to produce "East"
+	vector_cross(&m, &a, &E);
+	vector_normalize(&E);
+	// E X D = N, cross "East" with "Down" to produce "North" (parallel to the ground)
+	vector_cross(&a, &E, &N);
+	vector_normalize(&N);
 
-	angle = 0.0f;
-	for (int i = 0; i < HEADING_HISTORY_LENGTH; i++)
-	{
-		angle += headingHistory[i];
-	}
+	// compute heading
+	heading = atan2(vector_dot(&E, &from), vector_dot(&N, &from)) * 180.0f / PI;
 
-	return angle / HEADING_HISTORY_LENGTH;
+	if (heading < 0)
+		heading += 360;
+//Serial.print("Heading: "); Serial.println(heading);
+	return heading;
 }
 
 void NavCompass::GetMagneticField(float *magX, float *magY, float *magZ)
 {
-	if (navCompassDetected)
-	{
-		navCompassDriver->GetMagneticField(magX, magY, magZ);
-	}
+  if (navCompassDetected)
+  {
+    navCompassDriver->GetMagneticField(magX, magY, magZ);
+  }
 }
 
 void NavCompass::GetAcceleration(float *accX, float *accY, float *accZ)
 {
-	if (navCompassDetected)
-	{
-		navCompassDriver->GetAcceleration(accX, accY, accZ);
-	}
+  if (navCompassDetected)
+  {
+    navCompassDriver->GetAcceleration(accX, accY, accZ);
+  }
+}
+
+#if defined LSM303DLHC
+float NavCompass::GetTemperature()
+{
+	float temperature = navCompassDriver->GetTemperature();
+	return temperature;
+}
+#endif
+
+void NavCompass::vector_normalize(vector<float> *a)
+{
+	float mag = sqrt(vector_dot(a, a));
+	a->x /= mag;
+	a->y /= mag;
+	a->z /= mag;
 }

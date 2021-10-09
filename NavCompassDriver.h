@@ -20,9 +20,6 @@ public:
 	virtual string GetDeviceName() = 0;
 	virtual void GetMagneticField(float *magX, float* magY, float *magZ) = 0;
 	virtual void GetAcceleration(float *accX, float* accY, float *accZ) = 0;
-#if defined LSM303DLHC
-	virtual float GetTemperature() = 0;
-#endif
 };
 
 #endif /* NAVCOMPASSDRIVER_H_ */

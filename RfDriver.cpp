@@ -6,6 +6,7 @@
  */
 
 #include "RfDriver.h"
+#include "BoardConfig.h"
 #include <Arduino.h>
 
 #include <TeensyTimerTool.h>
@@ -17,7 +18,7 @@ OneShotTimer timerInt;
 RfDriver *RfDriver::rfDriver;
 
 RfDriver::RfDriver() :
-		gdo0Pin(0), messageFifo(nullptr), rfState(RF_STATE_RX_IDLE), messageBytesSent(0)
+		gdo0Pin(0), messageFifo(nullptr), rfState(RF_STATE_RX_IDLE), messageBytesSent(0), frequencyOffset_mHz(0)
 {
 }
 
@@ -25,13 +26,14 @@ RfDriver::~RfDriver()
 {
 }
 
-bool RfDriver::Init(int gdo0Pin, MicronetMessageFifo *messageFifo)
+bool RfDriver::Init(int gdo0Pin, MicronetMessageFifo *messageFifo, float frequencyOffset_mHz)
 {
 	if (!cc1101Driver.getCC1101())
 	{
 		return false;
 	}
 
+	this->frequencyOffset_mHz = frequencyOffset_mHz;
 	this->gdo0Pin = gdo0Pin;
 	this->messageFifo = messageFifo;
 	rfDriver = this;
@@ -43,8 +45,8 @@ bool RfDriver::Init(int gdo0Pin, MicronetMessageFifo *messageFifo)
 	cc1101Driver.setGDO0(gdo0Pin);
 	cc1101Driver.setCCMode(1); // set config for internal transmission mode.
 	cc1101Driver.setModulation(0); // set modulation mode. 0 = 2-FSK, 1 = GFSK, 2 = ASK/OOK, 3 = 4-FSK, 4 = MSK.
-	cc1101Driver.setMHZ(869.835); // Here you can set your basic frequency. The lib calculates the frequency automatically (default = 433.92).The cc1101 can: 300-348 MHZ, 387-464MHZ and 779-928MHZ. Read More info from datasheet.
-	cc1101Driver.setDeviation(34); // Set the Frequency deviation in kHz. Value from 1.58 to 380.85. Default is 47.60 kHz.
+	cc1101Driver.setMHZ(MICRONET_RF_CENTER_FREQUENCY + frequencyOffset_mHz); // Here you can set your basic frequency. The lib calculates the frequency automatically (default = 433.92).The cc1101 can: 300-348 MHZ, 387-464MHZ and 779-928MHZ. Read More info from datasheet.
+	cc1101Driver.setDeviation(MICRONET_RF_DEVIATION_MHZ); // Set the Frequency deviation in kHz. Value from 1.58 to 380.85. Default is 47.60 kHz.
 	cc1101Driver.setChannel(0); // Set the Channelnumber from 0 to 255. Default is cahnnel 0.
 	cc1101Driver.setChsp(199.95); // The channel spacing is multiplied by the channel number CHAN and added to the base frequency in kHz. Value from 25.39 to 405.45. Default is 199.95 kHz.
 	cc1101Driver.setRxBW(250); // Set the Receive Bandwidth in kHz. Value from 58.03 to 812.50. Default is 812.50 kHz.
@@ -58,7 +60,7 @@ bool RfDriver::Init(int gdo0Pin, MicronetMessageFifo *messageFifo)
 	cc1101Driver.setPktFormat(0); // Format of RX and TX data. 0 = Normal mode, use FIFOs for RX and TX. 1 = Synchronous serial mode, Data in on GDO0 and data out on either of the GDOx pins. 2 = Random TX mode; sends random data using PN9 generator. Used for test. Works as normal mode, setting 0 (00), in RX. 3 = Asynchronous serial mode, Data in on GDO0 and data out on either of the GDOx pins.
 	cc1101Driver.setLengthConfig(0); // 0 = Fixed packet length mode. 1 = Variable packet length mode. 2 = Infinite packet length mode. 3 = Reserved
 	cc1101Driver.setPacketLength(60); // Indicates the packet length when fixed packet length mode is enabled. If variable packet length mode is used, this value indicates the maximum packet length allowed.
-	cc1101Driver.setCrc(0); // 1 = CRC calculation in TX and CRC check in RX enabled. 0 = CRC disabled for TX and RX.
+	cc1101Driver.setCrc(0); // 1 = CRC calculation in TX and CRC check in RX enabled. 0 = CRC disabled for TX and RX.n
 	cc1101Driver.setCRC_AF(0); // Enable automatic flush of RX FIFO when CRC is not OK. This requires that only one packet is in the RXIFIFO and that packet length is limited to the RX FIFO size.
 	cc1101Driver.setDcFilterOff(0); // Disable digital DC blocking filter before demodulator. Only for data rates ≤ 250 kBaud The recommended IF frequency changes when the DC blocking is disabled. 1 = Disable (current optimized). 0 = Enable (better sensitivity).
 	cc1101Driver.setManchester(0); // Enables Manchester encoding/decoding. 0 = Disable. 1 = Enable.
@@ -67,6 +69,26 @@ bool RfDriver::Init(int gdo0Pin, MicronetMessageFifo *messageFifo)
 	cc1101Driver.setAppendStatus(0); // When enabled, two status bytes will be appended to the payload of the packet. The status bytes contain RSSI and LQI values, as well as CRC OK.
 
 	return true;
+}
+
+void RfDriver::SetFrequencyOffset(float offset_MHz)
+{
+	frequencyOffset_mHz = offset_MHz;
+}
+
+void RfDriver::SetFrequency(float freq_MHz)
+{
+	cc1101Driver.setMHZ(freq_MHz + frequencyOffset_mHz);
+}
+
+void RfDriver::SetDeviation(float freq_MHz)
+ {
+	cc1101Driver.setDeviation(freq_MHz);
+ }
+
+void RfDriver::SetBandwidth(float bw_MHz)
+{
+	cc1101Driver.setRxBW(bw_MHz);
 }
 
 void RfDriver::GDO0Callback()

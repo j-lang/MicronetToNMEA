@@ -69,6 +69,9 @@ void MenuAttachNetwork();
 void MenuConvertToNmea();
 void MenuScanAllMicronetTraffic();
 void MenuCalibrateMagnetoMeter();
+void MenuDebugCompass();
+void MenuCalibrateRfFrequency();
+void MenuTestRFTx();
 void SaveCalibration();
 void LoadCalibration();
 
@@ -85,8 +88,11 @@ MenuEntry_t mainMenu[] =
 { "Scan Micronet networks", MenuScanNetworks },
 { "Attach converter to a network", MenuAttachNetwork },
 { "Start NMEA conversion", MenuConvertToNmea },
-{ "Scan all surrounding Micronet traffic", MenuScanAllMicronetTraffic },
+{ "Scan surrounding Micronet traffic", MenuScanAllMicronetTraffic },
+{ "Calibrate RF frequency", MenuCalibrateRfFrequency },
 { "Calibrate magnetometer", MenuCalibrateMagnetoMeter },
+{ "*DEBUG* Test compass", MenuDebugCompass },
+{ "*DEBUG* Test RF Tx", MenuTestRFTx },
 { nullptr, nullptr } };
 
 /***************************************************************************/
@@ -113,7 +119,7 @@ void setup()
 	WIRED_SERIAL.begin(WIRED_BAUDRATE);
 
 	// Let time for serial drivers to set-up
-	delay (250);
+	delay(250);
 
 	// Setup main menu
 	gMenuManager.SetMenu(mainMenu);
@@ -127,7 +133,7 @@ void setup()
 
 	CONSOLE.print("Initializing CC1101 ... ");
 	// Check connection to CC1101
-	if (!gRfReceiver.Init(GDO0_PIN, &gRxMessageFifo))
+	if (!gRfReceiver.Init(GDO0_PIN, &gRxMessageFifo, gConfiguration.rfFrequencyOffset_MHz))
 	{
 		CONSOLE.println("Failed");
 		CONSOLE.println("Aborting execution : Verify connection to CC1101 board");
@@ -293,7 +299,7 @@ void PrintNetworkMap(NetworkMap_t *networkMap)
 
 void MenuAbout()
 {
-	CONSOLE.println("MicronetToNMEA, Version 0.4");
+	CONSOLE.println("MicronetToNMEA, Version 0.9");
 
 	CONSOLE.print("Device ID : ");
 	CONSOLE.println(gConfiguration.deviceId, HEX);
@@ -308,6 +314,9 @@ void MenuAbout()
 		CONSOLE.println("No Micronet Network attached");
 	}
 
+	CONSOLE.print("RF Frequency offset = ");
+	CONSOLE.print(gConfiguration.rfFrequencyOffset_MHz * 1000);
+	CONSOLE.println(" kHz");
 	CONSOLE.print("Wind speed factor = ");
 	CONSOLE.println(gConfiguration.windSpeedFactor_per);
 	CONSOLE.print("Wind direction offset = ");
@@ -331,11 +340,6 @@ void MenuAbout()
 		CONSOLE.print(gConfiguration.yMagOffset);
 		CONSOLE.print(" ");
 		CONSOLE.println(gConfiguration.zMagOffset);
-#if defined LSM303DLHC
-		CONSOLE.print("Magnetometer temperature : ");
-		CONSOLE.print(gNavCompass.GetTemperature());
-		CONSOLE.println(" °C");
-#endif
 	}
 	CONSOLE.println("Provides the following NMEA sentences :");
 	CONSOLE.println(" - INDPT (Depth below transducer. T121 with depth sounder required)");
@@ -619,7 +623,7 @@ void MenuConvertToNmea()
 		}
 		gNavDecoder.resetSentences();
 
-		// Only execute mangetic heading code if navigation compass is available
+		// Only execute magnetic heading code if navigation compass is available
 		if (gConfiguration.navCompassAvailable == true)
 		{
 			// Handle magnetic compass
@@ -787,6 +791,222 @@ void MenuCalibrateMagnetoMeter()
 		gConfiguration.SaveToEeprom();
 		CONSOLE.println("Configuration saved");
 	}
+	else
+	{
+		CONSOLE.println("Configuration discarded");
+	}
+}
+
+void MenuDebugCompass()
+{
+	bool exitLoop = false;
+	uint32_t pDisplayTime = 0;
+	uint32_t currentTime;
+	float mx, my, mz;
+	float ax, ay, az;
+
+	if (gConfiguration.navCompassAvailable == false)
+	{
+		CONSOLE.println("No navigation compass detected. Exiting menu ...");
+		return;
+	}
+
+	CONSOLE.println("Reading compass values ... ");
+
+	do
+	{
+		currentTime = millis();
+		if ((currentTime - pDisplayTime) > 250)
+		{
+			gNavCompass.GetMagneticField(&mx, &my, &mz);
+			gNavCompass.GetAcceleration(&ax, &ay, &az);
+			pDisplayTime = currentTime;
+
+			CONSOLE.print("Mag (");
+			CONSOLE.print(mx);
+			CONSOLE.print(" ");
+			CONSOLE.print(my);
+			CONSOLE.print(" ");
+			CONSOLE.print(mz);
+			CONSOLE.println(")");
+
+			CONSOLE.print("Acc (");
+			CONSOLE.print(ax);
+			CONSOLE.print(" ");
+			CONSOLE.print(ay);
+			CONSOLE.print(" ");
+			CONSOLE.print(az);
+			CONSOLE.println(")");
+		}
+
+		while (CONSOLE.available() > 0)
+		{
+			if (CONSOLE.read() == 0x1b)
+			{
+				CONSOLE.println("ESC key pressed, stopping scan.");
+				exitLoop = true;
+			}
+		}
+		yield();
+	} while (!exitLoop);
+}
+
+void MenuCalibrateRfFrequency()
+{
+#define FREQUENCY_SWEEP_RANGE_KHZ 200
+#define FREQUENCY_SWEEP_STEP_KHZ 2
+
+	bool exitTuneLoop;
+	bool updateFreq;
+	MicronetMessage_t *rxMessage;
+	uint32_t lastMessageTime = millis();
+	float currentFreq_mHz = MICRONET_RF_CENTER_FREQUENCY - (FREQUENCY_SWEEP_RANGE_KHZ / 2000.0f);
+	float firstWorkingFreq_mHz = 100000;
+	float lastWorkingFreq_mHz = 0;
+	float range_kHz, centerFrequency_mHz;
+	char c;
+
+	CONSOLE.println("");
+	CONSOLE.println("To tune RF frequency, you must start your Micronet network and");
+	CONSOLE.println("put MicronetToNMEA HW close to your Micronet main display (less than one meter).");
+	CONSOLE.println("You must not move any of the devices during the tuning phase.");
+	CONSOLE.println("Tuning phase will last about two minutes.");
+	CONSOLE.println("Press any key when you are ready to start.");
+
+	while (CONSOLE.available() == 0)
+	{
+		yield();
+	}
+
+	CONSOLE.println("");
+	CONSOLE.println("Starting Frequency tuning");
+	CONSOLE.println("Press ESC key at any time to stop tuning and come back to menu.");
+	CONSOLE.println("");
+
+	gRfReceiver.SetFrequencyOffset(0);
+	gRfReceiver.SetBandwidth(95);
+	gRfReceiver.SetFrequency(currentFreq_mHz);
+
+	updateFreq = false;
+	exitTuneLoop = false;
+
+	gRxMessageFifo.ResetFifo();
+	do
+	{
+		if ((rxMessage = gRxMessageFifo.Peek()) != nullptr)
+		{
+			if (gMicronetCodec.GetMessageId(rxMessage) == MICRONET_MESSAGE_ID_REQUEST_DATA)
+			{
+				lastMessageTime = millis();
+				CONSOLE.print("*");
+				updateFreq = true;
+				if (currentFreq_mHz < firstWorkingFreq_mHz)
+					firstWorkingFreq_mHz = currentFreq_mHz;
+				if (currentFreq_mHz > lastWorkingFreq_mHz)
+					lastWorkingFreq_mHz = currentFreq_mHz;
+			}
+			gRxMessageFifo.DeleteMessage();
+		}
+
+		if (millis() - lastMessageTime > 1250)
+		{
+			lastMessageTime = millis();
+			CONSOLE.print(".");
+			updateFreq = true;
+		}
+
+		if (updateFreq)
+		{
+			lastMessageTime = millis();
+			updateFreq = false;
+			if (currentFreq_mHz < MICRONET_RF_CENTER_FREQUENCY + (FREQUENCY_SWEEP_RANGE_KHZ / 2000.0f))
+			{
+				currentFreq_mHz += (FREQUENCY_SWEEP_STEP_KHZ / 1000.0f);
+				gRfReceiver.SetFrequency(currentFreq_mHz);
+			}
+			else
+			{
+				centerFrequency_mHz = ((lastWorkingFreq_mHz + firstWorkingFreq_mHz) / 2);
+				range_kHz = (lastWorkingFreq_mHz - firstWorkingFreq_mHz) * 1000;
+				if ((range_kHz > 0) && (range_kHz < FREQUENCY_SWEEP_RANGE_KHZ))
+				{
+					CONSOLE.println("");
+					CONSOLE.print("Frequency = ");
+					CONSOLE.print(centerFrequency_mHz * 1000);
+					CONSOLE.println("kHz");
+					CONSOLE.print("Range = ");
+					CONSOLE.print(range_kHz);
+					CONSOLE.println("kHz");
+					CONSOLE.print("Deviation to real frequency = ");
+					CONSOLE.print((centerFrequency_mHz - MICRONET_RF_CENTER_FREQUENCY) * 1000);
+					CONSOLE.println("kHz");
+
+					CONSOLE.println("Do you want to save the new RF calibration values (y/n) ?");
+					while (CONSOLE.available() == 0)
+						;
+					c = CONSOLE.read();
+					if ((c == 'y') || (c == 'Y'))
+					{
+						gConfiguration.rfFrequencyOffset_MHz = (centerFrequency_mHz - MICRONET_RF_CENTER_FREQUENCY);
+						gConfiguration.SaveToEeprom();
+						CONSOLE.println("Configuration saved");
+					}
+					else
+					{
+						CONSOLE.println("Configuration discarded");
+					}
+				}
+
+				exitTuneLoop = true;
+			}
+		}
+
+		while (CONSOLE.available() > 0)
+		{
+			if (CONSOLE.read() == 0x1b)
+			{
+				CONSOLE.println("\r\nESC key pressed, stopping frequency tuning.");
+				exitTuneLoop = true;
+			}
+		}
+
+		yield();
+	} while (!exitTuneLoop);
+
+	gRfReceiver.SetBandwidth(250);
+	gRfReceiver.SetFrequencyOffset(gConfiguration.rfFrequencyOffset_MHz);
+	gRfReceiver.SetFrequency(MICRONET_RF_CENTER_FREQUENCY);
+}
+
+void MenuTestRFTx()
+{
+	bool exitTestLoop = false;
+	MicronetMessage_t txMessage;
+
+	CONSOLE.println("");
+	CONSOLE.println("Testing RF transmission");
+	CONSOLE.println("Press ESC key at any time to stop and come back to menu.");
+	CONSOLE.println("");
+
+	do
+	{
+		CONSOLE.println("Tx!");
+		gMicronetCodec.EncodeSlotRequestMessage(&txMessage, 0x12345678, 0x12345678, 52);
+		gRfReceiver.TransmitMessage(&txMessage, micros() + 50000);
+
+		delay(1000);
+
+		while (CONSOLE.available() > 0)
+		{
+			if (CONSOLE.read() == 0x1b)
+			{
+				CONSOLE.println("ESC key pressed, stopping conversion.");
+				exitTestLoop = true;
+			}
+		}
+
+		yield();
+	} while (!exitTestLoop);
 }
 
 void SaveCalibration()

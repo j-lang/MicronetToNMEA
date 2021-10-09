@@ -38,9 +38,6 @@
 // Selects on which I2C bus is connected compass as per Wiring library definition
 #define NAVCOMPASS_I2C Wire
 
-// Choose your magnetometer breakout board
-#define LSM303DLHC
-
 // CC1101/SPI pins
 #define CS0_PIN              10
 #define MOSI_PIN             11

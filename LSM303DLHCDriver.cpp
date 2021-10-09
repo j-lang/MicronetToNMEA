@@ -48,23 +48,17 @@ bool LSM303DLHCDriver::Init()
 		return false;
 	}
 
-	// DLHC Acceleration register
+	// Acceleration register
 	I2CWrite(accAddr, 0x47, CTRL_REG1_A); // 0x47=0b01000111 Normal Mode, ODR 50Hz, all axes on
 //	I2CWrite(accAddr, 0x57, CTRL_REG1_A); // 0x57=0b01010111 Normal Mode, ODR 100Hz, all axes on
-//	I2CWrite(accAddr, 0x67, CTRL_REG1_A); // 0x67=0b01100111 Normal Mode, ODR 200Hz, all axes on
-
 	I2CWrite(accAddr, 0x08, CTRL_REG4_A); // 0x08=0b00001000 Range: +/-2 Gal, Sens.: 1mGal/LSB, highRes on
 //	I2CWrite(accAddr, 0x18, CTRL_REG4_A); // 0x18=0b00011000 Range: +/-4 Gal, Sens.: 2mGal/LSB, highRes on
-//	I2CWrite(accAddr, 0x28, CTRL_REG4_A); // 0x28=0b00101000 Range: +/-8 Gal, Sens.: 4mGal/LSB, highRes on
 
 	// Magnetic register
-//	I2CWrite(magAddr, 0x0C, CRA_REG_M); // 0x0C=0b00001100 ODR 7.5Hz
-//	I2CWrite(magAddr, 0x8C, CRA_REG_M); // 0x18=0b10001100 ODR 7.5Hz, temperature sensor on
-//	I2CWrite(magAddr, 0x10, CRA_REG_M); // 0x10=0b00010000 ODR 15Hz
-	I2CWrite(magAddr, 0x90, CRA_REG_M); // 0x10=0b10010000 ODR 15Hz, temperature sensor on
+	I2CWrite(magAddr, 0x10, CRA_REG_M); // 0x10=0b00010000 ODR 15Hz
+//	I2CWrite(magAddr, 0x90, CRA_REG_M); // 0x90=0b10010000 ODR 15Hz, temperature sensor on
 //	I2CWrite(magAddr, 0x14, CRA_REG_M); // 0x14=0b00010100 ODR 30Hz
 //	I2CWrite(magAddr, 0x98, CRA_REG_M); // 0x18=0b10011000 ODR 75Hz, temperature sensor on
-
 	I2CWrite(magAddr, 0x20, CRB_REG_M); // 0x20=0b00100000 Range: +/-1.3 Gauss gain: 1100LSB/Gauss
 //	I2CWrite(magAddr, 0x60, CRB_REG_M); // 0x60=0b01100000 Range: +/-2.5 Gauss gain: 670LSB/Gauss
 
@@ -118,21 +112,6 @@ void LSM303DLHCDriver::GetAcceleration(float *accX, float *accY, float *accZ)
 	*accY = (float) (ay >> 4);
 	*accZ = (float) (az >> 4);
 }
-
-#if defined LSM303DLHC
-float LSM303DLHCDriver::GetTemperature()
-{
-	uint8_t tl, th;
-
-	I2CRead(accAddr, TEMP_OUT_L_M, &tl);
-	I2CRead(accAddr, TEMP_OUT_H_M, &th);
-	int16_t temperature_raw = (int16_t)(th << 8 | tl);
-	if (temperature_raw > 32767) // 2's complement
-		temperature_raw -= 65536;
-	float temperature = 20.0f + (float) (temperature_raw >> 4) / 8.0f;
-	return temperature;
-}
-#endif
 
 bool LSM303DLHCDriver::I2CRead(uint8_t i2cAddress, uint8_t address, uint8_t *data)
 {

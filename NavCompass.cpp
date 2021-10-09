@@ -124,34 +124,26 @@ float NavCompass::GetHeading()
 	return heading;
 }
 
-void NavCompass::GetMagneticField(float *magX, float *magY, float *magZ)
-{
-  if (navCompassDetected)
-  {
-    navCompassDriver->GetMagneticField(magX, magY, magZ);
-  }
-}
-
-void NavCompass::GetAcceleration(float *accX, float *accY, float *accZ)
-{
-  if (navCompassDetected)
-  {
-    navCompassDriver->GetAcceleration(accX, accY, accZ);
-  }
-}
-
-#if defined LSM303DLHC
-float NavCompass::GetTemperature()
-{
-	float temperature = navCompassDriver->GetTemperature();
-	return temperature;
-}
-#endif
-
 void NavCompass::vector_normalize(vector<float> *a)
 {
 	float mag = sqrt(vector_dot(a, a));
 	a->x /= mag;
 	a->y /= mag;
 	a->z /= mag;
+}
+
+void NavCompass::GetMagneticField(float *magX, float *magY, float *magZ)
+{
+	if (navCompassDetected)
+	{
+		navCompassDriver->GetMagneticField(magX, magY, magZ);
+	}
+}
+
+void NavCompass::GetAcceleration(float *accX, float *accY, float *accZ)
+{
+	if (navCompassDetected)
+	{
+		navCompassDriver->GetAcceleration(accX, accY, accZ);
+	}
 }

@@ -34,9 +34,7 @@ public:
 	float GetHeading();
 	void GetMagneticField(float *magX, float *magY, float *magZ);
 	void GetAcceleration(float *accX, float* accY, float *accZ);
-#if defined LSM303DLHC
-	float GetTemperature();
-#endif
+
 	template <typename T> struct vector
 	{
 	  T x, y, z;

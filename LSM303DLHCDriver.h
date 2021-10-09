@@ -68,9 +68,6 @@ public:
 	virtual string GetDeviceName();
 	virtual void GetMagneticField(float *magX, float *magY, float *magZ);
 	virtual void GetAcceleration(float *accX, float *accY, float *accZ);
-#if defined LSM303DLHC
-	virtual float GetTemperature();
-#endif
 
 private:
 	uint8_t accAddr, magAddr;

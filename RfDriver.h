@@ -27,9 +27,9 @@ public:
 
 	bool Init(int gdo0_pin, MicronetMessageFifo *messageFifo, float frequencyOffset_mHz);
 	void SetFrequencyOffset(float offsetMHz);
-	void SetFrequency(float freqMhz);
-	void SetDeviation(float freqMhz);
-	void SetBandwidth(float bwMHz);
+	void SetFrequency(float freqMHz);
+	void SetDeviation(float freqKHz);
+	void SetBandwidth(float bwKHz);
 	void GDO0Callback();
 	void RestartReception();
 	void TransmitMessage(MicronetMessage_t *message, uint32_t transmitTimeUs);
@@ -43,11 +43,11 @@ private:
 	int messageBytesSent;
 	float frequencyOffset_mHz;
 
-	void GDO0RxCallback();
-	void GDO0TxCallback();
-	void GDO0LastTxCallback();
-	void TransmitCallback();
-	static void TimerHandler();
+	void IRAM_ATTR GDO0RxCallback();
+	void IRAM_ATTR GDO0TxCallback();
+	void IRAM_ATTR GDO0LastTxCallback();
+	void IRAM_ATTR TransmitCallback();
+	static void IRAM_ATTR TimerHandler(void *);
 	static RfDriver *rfDriver;
 };
 

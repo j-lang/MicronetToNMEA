@@ -41,7 +41,7 @@
 #include "NavCompass.h"
 
 #include <SPI.h>
-#include <wiring.h>
+#include <Wire.h>
 #include <ELECHOUSE_CC1101_SRC_DRV.h>
 
 /***************************************************************************/
@@ -59,7 +59,7 @@
 /*                           Local prototypes                              */
 /***************************************************************************/
 
-void RfIsr();
+void IRAM_ATTR RfIsr();
 void PrintByte(uint8_t data);
 void PrintInt(uint32_t data);
 void PrintRawMessage(MicronetMessage_t *message, uint32_t lastMasterRequest_us);
@@ -103,6 +103,7 @@ MenuEntry_t mainMenu[] =
 void setup()
 {
 	// Load configuration from EEPROM
+	gConfiguration.OpenEeprom();
 	gConfiguration.LoadFromEeprom();
 	LoadCalibration();
 
@@ -110,14 +111,22 @@ void setup()
 	USB_CONSOLE.begin(USB_BAUDRATE);
 
 	// Init GNSS NMEA serial link
+#ifdef TEENSYDUINO
 	GNSS_SERIAL.setRX(GNSS_RX_PIN);
 	GNSS_SERIAL.setTX(GNSS_TX_PIN);
 	GNSS_SERIAL.begin(GNSS_BAUDRATE);
+#elif ESP32
+	GNSS_SERIAL.begin(GNSS_BAUDRATE, SERIAL_8N1, GNSS_RX_PIN, GNSS_TX_PIN);
+#endif
 
 	// Init wired serial link
+#ifdef TEENSYDUINO
 	WIRED_SERIAL.setRX(WIRED_RX_PIN);
 	WIRED_SERIAL.setTX(WIRED_TX_PIN);
 	WIRED_SERIAL.begin(WIRED_BAUDRATE);
+#elif ESP32
+	WIRED_SERIAL.begin(WIRED_BAUDRATE, SERIAL_8N1, WIRED_RX_PIN, WIRED_TX_PIN);
+#endif
 
 	// Let time for serial drivers to set-up
 	delay(250);
@@ -126,10 +135,12 @@ void setup()
 	gMenuManager.SetMenu(mainMenu);
 
 	// Set SPI pin configuration
+#ifdef TEENSYDUINO
 	SPI.setMOSI(MOSI_PIN);
 	SPI.setMISO(MISO_PIN);
 	SPI.setSCK(SCK_PIN);
 	SPI.setCS(CS0_PIN);
+#endif
 	SPI.begin();
 
 	CONSOLE.print("Initializing CC1101 ... ");
@@ -207,7 +218,7 @@ void GNSS_CALLBACK()
 	}
 }
 
-void RfIsr()
+void IRAM_ATTR RfIsr()
 {
 	gRfReceiver.GDO0Callback();
 }

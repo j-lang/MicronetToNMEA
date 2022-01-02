@@ -166,7 +166,7 @@ bool LSM303DLHCDriver::I2CRead(uint8_t i2cAddress, uint8_t address, uint8_t *dat
 	*data = NAVCOMPASS_I2C.read();
 	NAVCOMPASS_I2C.endTransmission();
 
-	return (NAVCOMPASS_I2C.endTransmission() == 0);
+	return (true);
 }
 
 bool LSM303DLHCDriver::I2CBurstRead(uint8_t i2cAddress, uint8_t address, uint8_t *buffer, uint8_t length)

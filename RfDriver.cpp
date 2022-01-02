@@ -9,11 +9,14 @@
 #include "BoardConfig.h"
 #include <Arduino.h>
 
+#ifdef TEENSYDUINO
 #include <TeensyTimerTool.h>
-
 using namespace TeensyTimerTool;
-
 OneShotTimer timerInt;
+#elif ESP32
+#include <esp_timer.h>
+esp_timer_handle_t oneshot_timer; //variable to store the hardware timer handle
+#endif
 
 RfDriver *RfDriver::rfDriver;
 
@@ -38,15 +41,25 @@ bool RfDriver::Init(int gdo0Pin, MicronetMessageFifo *messageFifo, float frequen
 	this->messageFifo = messageFifo;
 	rfDriver = this;
 
+#ifdef TEENSYDUINO
 	timerInt.begin(TimerHandler);
+#elif ESP32
+	esp_timer_create_args_t oneshot_timer_args = {}; // initialize High Resolution Timer (HRT) configuration structure
+	oneshot_timer_args.callback = &TimerHandler; // configure for callback, name of callback function
+	esp_timer_create( &oneshot_timer_args, &oneshot_timer ); // assign configuration to the HRT, receive timer handle
+#endif
 
+	cc1101Driver.setClb(3, 22, 26); // Calibration coefficients 799-869MHz range
 	cc1101Driver.Init();
 	cc1101Driver.setGDO0(gdo0Pin);
 	cc1101Driver.setCCMode(1); // set config for internal transmission mode.
 	cc1101Driver.setModulation(0); // set modulation mode. 0 = 2-FSK, 1 = GFSK, 2 = ASK/OOK, 3 = 4-FSK, 4 = MSK.
-	cc1101Driver.setMHZ(MICRONET_RF_CENTER_FREQUENCY + frequencyOffset_mHz); // Here you can set your basic frequency. The lib calculates the frequency automatically (default = 433.92).The cc1101 can: 300-348 MHZ, 387-464MHZ and 779-928MHZ. Read More info from datasheet.
-	cc1101Driver.setDeviation(MICRONET_RF_DEVIATION_MHZ); // Set the Frequency deviation in kHz. Value from 1.58 to 380.85. Default is 47.60 kHz.
-	cc1101Driver.setChannel(0); // Set the Channelnumber from 0 to 255. Default is cahnnel 0.
+	float my_cfreq = MICRONET_RF_CENTER_FREQUENCY;
+	float my_freq = my_cfreq + frequencyOffset_mHz;
+	cc1101Driver.setMHZ(my_freq); // Here you can set your basic frequency. The lib calculates the frequency automatically (default = 433.92).The cc1101 can: 300-348 MHZ, 387-464MHZ and 779-928MHZ. Read More info from datasheet.
+	float my_dfreq = MICRONET_RF_DEVIATION_KHZ;
+	cc1101Driver.setDeviation(my_dfreq); // Set the Frequency deviation in kHz. Value from 1.58 to 380.85. Default is 47.60 kHz.
+	cc1101Driver.setChannel(0); // Set the Channelnumber from 0 to 255. Default is channel 0.
 	cc1101Driver.setChsp(199.95); // The channel spacing is multiplied by the channel number CHAN and added to the base frequency in kHz. Value from 25.39 to 405.45. Default is 199.95 kHz.
 	cc1101Driver.setRxBW(250); // Set the Receive Bandwidth in kHz. Value from 58.03 to 812.50. Default is 812.50 kHz.
 	cc1101Driver.setDRate(76.8); // Set the Data Rate in kBaud. Value from 0.02 to 1621.83. Default is 99.97 kBaud!
@@ -80,17 +93,17 @@ void RfDriver::SetFrequency(float freq_MHz)
 	cc1101Driver.setMHZ(freq_MHz + frequencyOffset_mHz);
 }
 
-void RfDriver::SetDeviation(float freq_MHz)
+void RfDriver::SetDeviation(float freq_KHz)
  {
-	cc1101Driver.setDeviation(freq_MHz);
+	cc1101Driver.setDeviation(freq_KHz);
  }
 
-void RfDriver::SetBandwidth(float bw_MHz)
+void RfDriver::SetBandwidth(float bw_KHz)
 {
-	cc1101Driver.setRxBW(bw_MHz);
+	cc1101Driver.setRxBW(bw_KHz);
 }
 
-void RfDriver::GDO0Callback()
+void IRAM_ATTR RfDriver::GDO0Callback()
 {
 	if (rfState == RF_STATE_TX_TRANSMITTING)
 	{
@@ -106,7 +119,7 @@ void RfDriver::GDO0Callback()
 	}
 }
 
-void RfDriver::GDO0RxCallback()
+void IRAM_ATTR RfDriver::GDO0RxCallback()
 {
 	static MicronetMessage_t message;
 	static int dataOffset;
@@ -179,7 +192,7 @@ void RfDriver::GDO0RxCallback()
 	messageFifo->Push(message);
 }
 
-void RfDriver::GDO0TxCallback()
+void IRAM_ATTR RfDriver::GDO0TxCallback()
 {
 	int bytesInFifo = 17; // Corresponds to the FIFO threshold of 0x0b
 
@@ -196,14 +209,14 @@ void RfDriver::GDO0TxCallback()
 	}
 }
 
-void RfDriver::GDO0LastTxCallback()
+void IRAM_ATTR RfDriver::GDO0LastTxCallback()
 {
 	cc1101Driver.setSidle();
 	cc1101Driver.SpiStrobe(CC1101_SFTX);
 	RestartReception();
 }
 
-void RfDriver::RestartReception()
+void IRAM_ATTR RfDriver::RestartReception()
 {
 	rfState = RF_STATE_RX_IDLE;
 	cc1101Driver.setSidle();
@@ -213,6 +226,7 @@ void RfDriver::RestartReception()
 	cc1101Driver.SpiStrobe(CC1101_SFRX);
 	cc1101Driver.SpiWriteReg(CC1101_FIFOTHR, 0x03);
 	cc1101Driver.SpiWriteReg(CC1101_IOCFG0, 0x01);
+delay(20);
 	cc1101Driver.SetRx();
 }
 
@@ -227,15 +241,19 @@ void RfDriver::TransmitMessage(MicronetMessage_t *message, uint32_t transmitTime
 	{
 		return;
 	}
+#ifdef TEENSYDUINO
 	timerInt.trigger(transmitDelay);
+#elif ESP32
+	esp_timer_start_once( oneshot_timer, transmitDelay ); // trigger one shot timer
+#endif
 }
 
-void RfDriver::TimerHandler()
+void IRAM_ATTR RfDriver::TimerHandler(void *)
 {
 	rfDriver->TransmitCallback();
 }
 
-void RfDriver::TransmitCallback()
+void IRAM_ATTR RfDriver::TransmitCallback()
 {
 	// Change CC1101 configuration for transmission
 	cc1101Driver.setSidle();

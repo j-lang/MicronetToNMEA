@@ -102,6 +102,15 @@ Configuration::~Configuration()
 {
 }
 
+void Configuration::OpenEeprom() {
+	if (!EEPROM.begin(512)) {
+		Serial.println("Failed to initialise EEPROM");
+		Serial.println("Restarting...");
+		delay(1000);
+		ESP.restart();
+	} 
+}
+
 void Configuration::LoadFromEeprom()
 {
 	ConfigBlock_t configBlock;
@@ -175,6 +184,7 @@ void Configuration::SaveToEeprom()
 		if (pEepromBlock[i] != pConfig[i])
 		{
 			EEPROM.put(0, configBlock);
+			EEPROM.commit();
 			break;
 		}
 	}

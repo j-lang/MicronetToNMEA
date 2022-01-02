@@ -51,6 +51,7 @@ public:
 	Configuration();
 	virtual ~Configuration();
 
+	void OpenEeprom();
 	void LoadFromEeprom();
 	void SaveToEeprom();
 

@@ -12,6 +12,13 @@
 #include "MicronetMessageFifo.h"
 #include "ELECHOUSE_CC1101_SRC_DRV.h"
 
+// ISR's should work from SRAM in ESP32
+#ifdef ESP32
+#define SRAM_USE IRAM_ATTR
+#elif TEENSYDUINO
+#define SRAM_USE
+#endif
+
 typedef enum {
 	RF_STATE_RX_IDLE = 0,
 	RF_STATE_RX_RECEIVING,
@@ -43,11 +50,15 @@ private:
 	int messageBytesSent;
 	float frequencyOffset_mHz;
 
-	void IRAM_ATTR GDO0RxCallback();
-	void IRAM_ATTR GDO0TxCallback();
-	void IRAM_ATTR GDO0LastTxCallback();
-	void IRAM_ATTR TransmitCallback();
-	static void IRAM_ATTR TimerHandler(void *);
+	void SRAM_USE GDO0RxCallback();
+	void SRAM_USE GDO0TxCallback();
+	void SRAM_USE GDO0LastTxCallback();
+	void SRAM_USE TransmitCallback();
+#ifdef TEENSYDUINO
+	static void TimerHandler();
+#elif ESP32
+  static void SRAM_USE TimerHandler(void *);
+#endif
 	static RfDriver *rfDriver;
 };
 

@@ -59,7 +59,7 @@
 /*                           Local prototypes                              */
 /***************************************************************************/
 
-void IRAM_ATTR RfIsr();
+void SRAM_USE RfIsr();
 void PrintByte(uint8_t data);
 void PrintInt(uint32_t data);
 void PrintRawMessage(MicronetMessage_t *message, uint32_t lastMasterRequest_us);
@@ -103,7 +103,9 @@ MenuEntry_t mainMenu[] =
 void setup()
 {
 	// Load configuration from EEPROM
+#ifdef ESP32
 	gConfiguration.OpenEeprom();
+#endif
 	gConfiguration.LoadFromEeprom();
 	LoadCalibration();
 
@@ -218,7 +220,7 @@ void GNSS_CALLBACK()
 	}
 }
 
-void IRAM_ATTR RfIsr()
+void SRAM_USE RfIsr()
 {
 	gRfReceiver.GDO0Callback();
 }
@@ -958,7 +960,7 @@ void MenuCalibrateRfFrequency()
 					CONSOLE.print("Frequency = ");
 					CONSOLE.print(centerFrequency_mHz * 1000);
 					CONSOLE.println("kHz");
-					CONSOLE.print("Range = ");
+					CONSOLE.print("Working range = ");
 					CONSOLE.print(range_kHz);
 					CONSOLE.println("kHz");
 					CONSOLE.print("Deviation to real frequency = ");

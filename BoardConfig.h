@@ -36,27 +36,48 @@
 /***************************************************************************/
 
 // Selects on which I2C bus is connected compass as per Wiring library definition
-#define NAVCOMPASS_I2C Wire
+#define NAVCOMPASS_I2C Wire // SDA0: 18 SCL0: 19
+#ifdef ESP32
 #define I2C_SDA       21 // default pins
 #define I2C_SCL       22
+#endif
 
 // CC1101/SPI pins
+#ifdef TEENSYDUINO
+#define CS0_PIN       10
+#define MOSI_PIN      11
+#define MISO_PIN      12
+#define SCK_PIN       14
+#define GDO0_PIN      24
+#elif ESP32
 #define CS0_PIN        5 //default pins
 #define MOSI_PIN      23
 #define MISO_PIN      19
 #define SCK_PIN       18
-#define GDO0_PIN       4
+#define GDO0_PIN       2
+#endif
 
 // ERROR LED pin
-//#define LED_PIN       LED_BUILTIN
+#ifdef TEENSYDUINO
+#define LED_PIN       LED_BUILTIN
+#elif ESP32
 #define LED_PIN        2
+#endif
 
 // NMEA/GNSS UART pins
+#ifdef TEENSYDUINO
+#define GNSS_SERIAL   Serial1
+#define GNSS_BAUDRATE 38400
+#define GNSS_CALLBACK serialEvent1
+#define GNSS_RX_PIN   0
+#define GNSS_TX_PIN   1
+#elif ESP32
 #define GNSS_SERIAL   Serial2
 #define GNSS_BAUDRATE 38400
 #define GNSS_CALLBACK serialEvent2
 #define GNSS_RX_PIN   16
 #define GNSS_TX_PIN   17
+#endif
 
 // USB UART params
 #define USB_CONSOLE  Serial
@@ -75,11 +96,10 @@
 #define WIRED_TX_PIN   13
 #endif
 
-
 // The console to use for menu and NMEA output
-#define CONSOLE  USB_CONSOLE
+#define CONSOLE USB_CONSOLE
 #define NMEA_OUT USB_CONSOLE
-#define NMEA_IN  USB_CONSOLE
+#define NMEA_IN USB_CONSOLE
 
 /***************************************************************************/
 /*                                Types                                    */

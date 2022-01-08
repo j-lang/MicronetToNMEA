@@ -101,7 +101,7 @@ Configuration::Configuration()
 Configuration::~Configuration()
 {
 }
-
+#ifdef ESP32
 void Configuration::OpenEeprom() {
 	if (!EEPROM.begin(512)) {
 		Serial.println("Failed to initialise EEPROM");
@@ -110,7 +110,7 @@ void Configuration::OpenEeprom() {
 		ESP.restart();
 	} 
 }
-
+#endif
 void Configuration::LoadFromEeprom()
 {
 	ConfigBlock_t configBlock;
@@ -184,7 +184,9 @@ void Configuration::SaveToEeprom()
 		if (pEepromBlock[i] != pConfig[i])
 		{
 			EEPROM.put(0, configBlock);
+#ifdef ESP32
 			EEPROM.commit();
+#endif
 			break;
 		}
 	}

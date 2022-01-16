@@ -104,7 +104,11 @@ void RfDriver::SetBandwidth(float bw_KHz)
 	cc1101Driver.setRxBW(bw_KHz);
 }
 
+<<<<<<< HEAD
 void RfDriver::GDO0Callback()
+=======
+void SRAM_USE RfDriver::GDO0Callback()
+>>>>>>> 655c10a0add50a452786f28fdcb86dbfbf86f6ee
 {
 	if (rfState == RF_STATE_TX_TRANSMITTING)
 	{
@@ -120,7 +124,11 @@ void RfDriver::GDO0Callback()
 	}
 }
 
+<<<<<<< HEAD
 void RfDriver::GDO0RxCallback()
+=======
+void SRAM_USE RfDriver::GDO0RxCallback()
+>>>>>>> 655c10a0add50a452786f28fdcb86dbfbf86f6ee
 {
 	static MicronetMessage_t message;
 	static int dataOffset;
@@ -210,7 +218,11 @@ void RfDriver::GDO0RxCallback()
 	messageFifo->Push(message);
 }
 
+<<<<<<< HEAD
 void RfDriver::GDO0TxCallback()
+=======
+void SRAM_USE RfDriver::GDO0TxCallback()
+>>>>>>> 655c10a0add50a452786f28fdcb86dbfbf86f6ee
 {
 	int bytesInFifo = 17; // Corresponds to the FIFO threshold of 0x0b
 
@@ -227,14 +239,22 @@ void RfDriver::GDO0TxCallback()
 	}
 }
 
+<<<<<<< HEAD
 void RfDriver::GDO0LastTxCallback()
+=======
+void SRAM_USE RfDriver::GDO0LastTxCallback()
+>>>>>>> 655c10a0add50a452786f28fdcb86dbfbf86f6ee
 {
 	cc1101Driver.setSidle();
 	cc1101Driver.SpiStrobe(CC1101_SFTX);
 	RestartReception();
 }
 
+<<<<<<< HEAD
 void RfDriver::RestartReception()
+=======
+void SRAM_USE RfDriver::RestartReception()
+>>>>>>> 655c10a0add50a452786f28fdcb86dbfbf86f6ee
 {
 	rfState = RF_STATE_RX_IDLE;
 	cc1101Driver.setSidle();
@@ -244,9 +264,13 @@ void RfDriver::RestartReception()
 	cc1101Driver.SpiStrobe(CC1101_SFRX);
 	cc1101Driver.SpiWriteReg(CC1101_FIFOTHR, 0x03);
 	cc1101Driver.SpiWriteReg(CC1101_IOCFG0, 0x01);
+<<<<<<< HEAD
+	delay(20);
+=======
 #ifdef ESP32
    delay(20); //ToDo
 #endif
+>>>>>>> 655c10a0add50a452786f28fdcb86dbfbf86f6ee
 	cc1101Driver.SetRx();
 }
 
@@ -277,7 +301,11 @@ void SRAM_USE RfDriver::TimerHandler(void *)
 	rfDriver->TransmitCallback();
 }
 
+<<<<<<< HEAD
 void RfDriver::TransmitCallback()
+=======
+void SRAM_USE RfDriver::TransmitCallback()
+>>>>>>> 655c10a0add50a452786f28fdcb86dbfbf86f6ee
 {
 	// Change CC1101 configuration for transmission
 	cc1101Driver.setSidle();

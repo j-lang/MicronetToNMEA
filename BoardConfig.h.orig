@@ -36,6 +36,20 @@
 /***************************************************************************/
 
 // Selects on which I2C bus is connected compass as per Wiring library definition
+<<<<<<< HEAD
+#define NAVCOMPASS_I2C Wire
+#define I2C_SDA        21
+#define I2C_SCL        22
+
+// CC1101/SPI pins
+#define CS0_PIN        5
+#define MOSI_PIN       23
+#define MISO_PIN       19
+#define SCK_PIN        18
+#define GDO0_PIN       25
+
+// ERROR LED pin
+=======
 #define NAVCOMPASS_I2C Wire // SDA0: 18 SCL0: 19
 #ifdef ESP32
 #define I2C_SDA       21 // default pins
@@ -61,6 +75,7 @@
 #ifdef TEENSYDUINO
 #define LED_PIN       LED_BUILTIN
 #elif ESP32
+>>>>>>> 655c10a0add50a452786f28fdcb86dbfbf86f6ee
 #define LED_PIN        2
 #endif
 

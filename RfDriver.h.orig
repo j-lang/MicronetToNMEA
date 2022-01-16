@@ -50,15 +50,23 @@ private:
 	int messageBytesSent;
 	float frequencyOffset_mHz;
 
+<<<<<<< HEAD
 	void GDO0RxCallback();
 	void GDO0TxCallback();
 	void GDO0LastTxCallback();
 	void TransmitCallback();
+	static void IRAM_ATTR TimerHandler(void *);
+=======
+	void SRAM_USE GDO0RxCallback();
+	void SRAM_USE GDO0TxCallback();
+	void SRAM_USE GDO0LastTxCallback();
+	void SRAM_USE TransmitCallback();
 #ifdef TEENSYDUINO
 	static void TimerHandler();
 #elif ESP32
   static void SRAM_USE TimerHandler(void *);
 #endif
+>>>>>>> 655c10a0add50a452786f28fdcb86dbfbf86f6ee
 	static RfDriver *rfDriver;
 };
 

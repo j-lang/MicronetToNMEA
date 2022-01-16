@@ -51,7 +51,9 @@ public:
 	Configuration();
 	virtual ~Configuration();
 
+#ifdef ESP32
 	void OpenEeprom();
+#endif
 	void LoadFromEeprom();
 	void SaveToEeprom();
 

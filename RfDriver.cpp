@@ -94,16 +94,16 @@ void RfDriver::SetFrequency(float freq_MHz)
 }
 
 void RfDriver::SetDeviation(float freq_KHz)
- {
+{
 	cc1101Driver.setDeviation(freq_KHz);
- }
+}
 
 void RfDriver::SetBandwidth(float bw_KHz)
 {
 	cc1101Driver.setRxBW(bw_KHz);
 }
 
-void IRAM_ATTR RfDriver::GDO0Callback()
+void RfDriver::GDO0Callback()
 {
 	if (rfState == RF_STATE_TX_TRANSMITTING)
 	{
@@ -119,41 +119,41 @@ void IRAM_ATTR RfDriver::GDO0Callback()
 	}
 }
 
-void IRAM_ATTR RfDriver::GDO0RxCallback()
+void RfDriver::GDO0RxCallback()
 {
 	static MicronetMessage_t message;
 	static int dataOffset;
-	static int packetLength;
+	static int messageLength;
 	static uint32_t startTime_us;
 	int nbBytes;
 
-	// When we reach this point, we know that a packet is under reception by CC1101. We will not wait the end of this reception and will
-	// begin collecting bytes right now. This way we will be able to receive packets that are longer than FIFO size and we will instruct
-	// CC1101 to change packet size on the fly as soon as we will have identified the length field
+	// When we reach this point, we know that a message is under reception by CC1101. We will not wait the end of this reception and will
+	// begin collecting bytes right now. This way we will be able to receive messages that are longer than FIFO size and we will instruct
+	// CC1101 to change messages size on the fly as soon as we will have identified the length field
 	// How many bytes are already in the FIFO ?
 	nbBytes = cc1101Driver.SpiReadStatus(CC1101_RXBYTES);
 	// Check for FIFO overflow
 	if (nbBytes & 0x80)
 	{
-		// Yes : ignore current packet and restart CC1101 reception for the next packet
+		// Yes : ignore current message and restart CC1101 reception for the next packet
 		RestartReception();
 		return;
 	}
 
 	if (rfState == RF_STATE_RX_IDLE)
 	{
-		// This is a new message
+		// This is a new message : timestamp it
 		startTime_us = micros() - PREAMBLE_LENGTH_IN_US;
-		packetLength = -1;
+		messageLength = 4096;
 		dataOffset = 0;
 	}
 	// Are there new bytes in the FIFO ?
-	if (nbBytes > 0)
+	while (nbBytes > 0)
 	{
 		// Yes : read them
 		cc1101Driver.SpiReadBurstReg(CC1101_RXFIFO, message.data + dataOffset, nbBytes);
 		dataOffset += nbBytes;
-		// Check if we have reached the packet length field
+		// Check if we have reached the message length field
 		if ((rfState == RF_STATE_RX_IDLE) && (dataOffset >= (MICRONET_LEN_OFFSET_1 + 2)))
 		{
 			// Yes : check that this is a valid length
@@ -161,23 +161,40 @@ void IRAM_ATTR RfDriver::GDO0RxCallback()
 					&& (message.data[MICRONET_LEN_OFFSET_1] < MICRONET_MAX_MESSAGE_LENGTH - 3)
 					&& ((message.data[MICRONET_LEN_OFFSET_1] + 2) >= MICRONET_PAYLOAD_OFFSET))
 			{
-				packetLength = message.data[MICRONET_LEN_OFFSET_1] + 2;
-				// Update CC1101's packet length register
-				cc1101Driver.setPacketLength(packetLength);
+				rfState = RF_STATE_RX_RECEIVING;
+				messageLength = message.data[MICRONET_LEN_OFFSET_1] + 2;
+				// Update CC1101's packet/message length register
+				cc1101Driver.setPacketLength(messageLength);
 			}
 			else
 			{
-				// The packet length is not valid : ignore current packet and restart CC1101 reception for the next packet
+				// The message length is not valid : ignore current message and restart CC1101 reception
 				RestartReception();
 				return;
 			}
 		}
-		// Continue reading as long as entire packet has not been received
+
+		// Check if we have reached message end
+		if (dataOffset < messageLength)
+		{
+			// No : read remaining bytes in FIFO
+			nbBytes = cc1101Driver.SpiReadStatus(CC1101_RXBYTES);
+			// Don't read more bytes than necessary
+			if (dataOffset + nbBytes > messageLength)
+			{
+				nbBytes = messageLength - dataOffset;
+			}
+		}
+		else
+		{
+			// Message end reached : exit reading loop
+			break;
+		}
 	}
 
-	if (dataOffset < packetLength)
+	// If full packet has not been reached, it means that the FIFO is empty : exit ISR and wait next FIFO interrupt
+	if (dataOffset < messageLength)
 	{
-		rfState = RF_STATE_RX_RECEIVING;
 		return;
 	}
 
@@ -185,14 +202,14 @@ void IRAM_ATTR RfDriver::GDO0RxCallback()
 	// Restart CC1101 reception as soon as possible not to miss the next packet
 	RestartReception();
 	// Fill message structure
-	message.len = packetLength;
+	message.len = messageLength;
 	message.rssi = cc1101Driver.getRssi();
 	message.startTime_us = startTime_us;
 	message.endTime_us = endTime_us;
 	messageFifo->Push(message);
 }
 
-void IRAM_ATTR RfDriver::GDO0TxCallback()
+void RfDriver::GDO0TxCallback()
 {
 	int bytesInFifo = 17; // Corresponds to the FIFO threshold of 0x0b
 
@@ -209,14 +226,14 @@ void IRAM_ATTR RfDriver::GDO0TxCallback()
 	}
 }
 
-void IRAM_ATTR RfDriver::GDO0LastTxCallback()
+void RfDriver::GDO0LastTxCallback()
 {
 	cc1101Driver.setSidle();
 	cc1101Driver.SpiStrobe(CC1101_SFTX);
 	RestartReception();
 }
 
-void IRAM_ATTR RfDriver::RestartReception()
+void RfDriver::RestartReception()
 {
 	rfState = RF_STATE_RX_IDLE;
 	cc1101Driver.setSidle();
@@ -226,7 +243,7 @@ void IRAM_ATTR RfDriver::RestartReception()
 	cc1101Driver.SpiStrobe(CC1101_SFRX);
 	cc1101Driver.SpiWriteReg(CC1101_FIFOTHR, 0x03);
 	cc1101Driver.SpiWriteReg(CC1101_IOCFG0, 0x01);
-delay(20);
+	delay(20);
 	cc1101Driver.SetRx();
 }
 
@@ -253,7 +270,7 @@ void IRAM_ATTR RfDriver::TimerHandler(void *)
 	rfDriver->TransmitCallback();
 }
 
-void IRAM_ATTR RfDriver::TransmitCallback()
+void RfDriver::TransmitCallback()
 {
 	// Change CC1101 configuration for transmission
 	cc1101Driver.setSidle();

@@ -37,18 +37,17 @@
 
 // Selects on which I2C bus is connected compass as per Wiring library definition
 #define NAVCOMPASS_I2C Wire
-#define I2C_SDA       21 // default pins
-#define I2C_SCL       22
+#define I2C_SDA        21
+#define I2C_SCL        22
 
 // CC1101/SPI pins
-#define CS0_PIN        5 //default pins
-#define MOSI_PIN      23
-#define MISO_PIN      19
-#define SCK_PIN       18
-#define GDO0_PIN       4
+#define CS0_PIN        5
+#define MOSI_PIN       23
+#define MISO_PIN       19
+#define SCK_PIN        18
+#define GDO0_PIN       25
 
 // ERROR LED pin
-//#define LED_PIN       LED_BUILTIN
 #define LED_PIN        2
 
 // NMEA/GNSS UART pins

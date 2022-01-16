@@ -43,10 +43,10 @@ private:
 	int messageBytesSent;
 	float frequencyOffset_mHz;
 
-	void IRAM_ATTR GDO0RxCallback();
-	void IRAM_ATTR GDO0TxCallback();
-	void IRAM_ATTR GDO0LastTxCallback();
-	void IRAM_ATTR TransmitCallback();
+	void GDO0RxCallback();
+	void GDO0TxCallback();
+	void GDO0LastTxCallback();
+	void TransmitCallback();
 	static void IRAM_ATTR TimerHandler(void *);
 	static RfDriver *rfDriver;
 };

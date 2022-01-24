@@ -209,7 +209,7 @@ void loop()
 	firstLoop = false;
 }
 
-void GNSS_CALLBACK()
+void SRAM_USE GNSS_CALLBACK()
 {
 	// This callback is called each time we received data from the NMEA GNSS
 	while (GNSS_SERIAL.available() > 0)

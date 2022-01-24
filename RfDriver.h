@@ -50,10 +50,10 @@ private:
 	int messageBytesSent;
 	float frequencyOffset_mHz;
 
-	void GDO0RxCallback();
-	void GDO0TxCallback();
-	void GDO0LastTxCallback();
-	void TransmitCallback();
+	void SRAM_USE GDO0RxCallback();
+	void SRAM_USE GDO0TxCallback();
+	void SRAM_USE GDO0LastTxCallback();
+	void SRAM_USE TransmitCallback();
 #ifdef TEENSYDUINO
 	static void TimerHandler();
 #elif ESP32

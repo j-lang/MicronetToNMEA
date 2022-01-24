@@ -8,6 +8,7 @@
 #include "RfDriver.h"
 #include "BoardConfig.h"
 #include <Arduino.h>
+#include <SPI.h>
 
 #ifdef TEENSYDUINO
 #include <TeensyTimerTool.h>
@@ -81,6 +82,8 @@ bool RfDriver::Init(int gdo0Pin, MicronetMessageFifo *messageFifo, float frequen
 	cc1101Driver.setPQT(4); // Preamble quality estimator threshold. The preamble quality estimator increases an internal counter by one each time a bit is received that is different from the previous bit, and decreases the counter by 8 each time a bit is received that is the same as the last bit. A threshold of 4∙PQT for this counter is used to gate sync word detection. When PQT=0 a sync word is always accepted.
 	cc1101Driver.setAppendStatus(0); // When enabled, two status bytes will be appended to the payload of the packet. The status bytes contain RSSI and LQI values, as well as CRC OK.
 
+	SPI.beginTransaction(SPISettings(7500000, MSBFIRST, SPI_MODE0));
+
 	return true;
 }
 
@@ -95,16 +98,16 @@ void RfDriver::SetFrequency(float freq_MHz)
 }
 
 void RfDriver::SetDeviation(float freq_KHz)
-{
+ {
 	cc1101Driver.setDeviation(freq_KHz);
-}
+ }
 
 void RfDriver::SetBandwidth(float bw_KHz)
 {
 	cc1101Driver.setRxBW(bw_KHz);
 }
 
-void RfDriver::GDO0Callback()
+void SRAM_USE RfDriver::GDO0Callback()
 {
 	if (rfState == RF_STATE_TX_TRANSMITTING)
 	{
@@ -120,7 +123,7 @@ void RfDriver::GDO0Callback()
 	}
 }
 
-void RfDriver::GDO0RxCallback()
+void SRAM_USE RfDriver::GDO0RxCallback()
 {
 	static MicronetMessage_t message;
 	static int dataOffset;
@@ -210,7 +213,7 @@ void RfDriver::GDO0RxCallback()
 	messageFifo->Push(message);
 }
 
-void RfDriver::GDO0TxCallback()
+void SRAM_USE RfDriver::GDO0TxCallback()
 {
 	int bytesInFifo = 17; // Corresponds to the FIFO threshold of 0x0b
 
@@ -227,14 +230,14 @@ void RfDriver::GDO0TxCallback()
 	}
 }
 
-void RfDriver::GDO0LastTxCallback()
+void SRAM_USE RfDriver::GDO0LastTxCallback()
 {
 	cc1101Driver.setSidle();
 	cc1101Driver.SpiStrobe(CC1101_SFTX);
 	RestartReception();
 }
 
-void RfDriver::RestartReception()
+void SRAM_USE RfDriver::RestartReception()
 {
 	rfState = RF_STATE_RX_IDLE;
 	cc1101Driver.setSidle();
@@ -244,9 +247,6 @@ void RfDriver::RestartReception()
 	cc1101Driver.SpiStrobe(CC1101_SFRX);
 	cc1101Driver.SpiWriteReg(CC1101_FIFOTHR, 0x03);
 	cc1101Driver.SpiWriteReg(CC1101_IOCFG0, 0x01);
-#ifdef ESP32
-   delay(20); //ToDo
-#endif
 	cc1101Driver.SetRx();
 }
 
@@ -277,7 +277,7 @@ void SRAM_USE RfDriver::TimerHandler(void *)
 	rfDriver->TransmitCallback();
 }
 
-void RfDriver::TransmitCallback()
+void SRAM_USE RfDriver::TransmitCallback()
 {
 	// Change CC1101 configuration for transmission
 	cc1101Driver.setSidle();

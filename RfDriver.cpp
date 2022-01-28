@@ -82,7 +82,9 @@ bool RfDriver::Init(int gdo0Pin, MicronetMessageFifo *messageFifo, float frequen
 	cc1101Driver.setPQT(4); // Preamble quality estimator threshold. The preamble quality estimator increases an internal counter by one each time a bit is received that is different from the previous bit, and decreases the counter by 8 each time a bit is received that is the same as the last bit. A threshold of 4∙PQT for this counter is used to gate sync word detection. When PQT=0 a sync word is always accepted.
 	cc1101Driver.setAppendStatus(0); // When enabled, two status bytes will be appended to the payload of the packet. The status bytes contain RSSI and LQI values, as well as CRC OK.
 
+#ifdef ESP32
 	SPI.beginTransaction(SPISettings(7500000, MSBFIRST, SPI_MODE0));
+#endif
 
 	return true;
 }
@@ -250,7 +252,7 @@ void SRAM_USE RfDriver::RestartReception()
 	cc1101Driver.SetRx();
 }
 
-void RfDriver::TransmitMessage(MicronetMessage_t *message, uint32_t transmitTimeUs)
+void SRAM_USE RfDriver::TransmitMessage(MicronetMessage_t *message, uint32_t transmitTimeUs)
 {
 	messageToTransmit.len = message->len;
 	messageToTransmit.startTime_us = transmitTimeUs;

@@ -31,6 +31,7 @@
 /*                              Includes                                   */
 /***************************************************************************/
 
+#include <Arduino.h>
 #include <stdint.h>
 #include "NavigationData.h"
 
@@ -40,6 +41,13 @@
 
 #define NMEA_SENTENCE_MAX_LENGTH   96
 #define NMEA_SENTENCE_HISTORY_SIZE 24
+
+// ISR's should work from SRAM in ESP32
+#ifdef ESP32
+#define SRAM_USE IRAM_ATTR
+#elif TEENSYDUINO
+#define SRAM_USE
+#endif
 
 /***************************************************************************/
 /*                                Types                                    */
@@ -62,12 +70,12 @@ private:
 	char sentenceBuffer[NMEA_SENTENCE_HISTORY_SIZE][NMEA_SENTENCE_MAX_LENGTH];
 	int sentenceWriteIndex;
 
-	void DecodeSentence(int sentenceIndex, NavigationData *navData);
-	void DecodeRMBSentence(char *sentence, NavigationData *navData);
-	void DecodeRMCSentence(char *sentence, NavigationData *navData);
-	void DecodeGGASentence(char *sentence, NavigationData *navData);
-	void DecodeVTGSentence(char *sentence, NavigationData *navData);
-	int16_t NibbleValue(char c);
+	void SRAM_USE DecodeSentence(int sentenceIndex, NavigationData *navData);
+	void SRAM_USE DecodeRMBSentence(char *sentence, NavigationData *navData);
+	void SRAM_USE DecodeRMCSentence(char *sentence, NavigationData *navData);
+	void SRAM_USE DecodeGGASentence(char *sentence, NavigationData *navData);
+	void SRAM_USE DecodeVTGSentence(char *sentence, NavigationData *navData);
+	int16_t SRAM_USE NibbleValue(char c);
 };
 
 /***************************************************************************/

@@ -37,9 +37,9 @@ public:
 	void SetFrequency(float freqMHz);
 	void SetDeviation(float freqKHz);
 	void SetBandwidth(float bwKHz);
-	void GDO0Callback();
-	void RestartReception();
-	void TransmitMessage(MicronetMessage_t *message, uint32_t transmitTimeUs);
+	void SRAM_USE GDO0Callback();
+	void SRAM_USE RestartReception();
+	void SRAM_USE TransmitMessage(MicronetMessage_t *message, uint32_t transmitTimeUs);
 
 private:
 	int gdo0Pin;

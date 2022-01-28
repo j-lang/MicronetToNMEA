@@ -69,7 +69,7 @@ NmeaDecoder::~NmeaDecoder()
 {
 }
 
-void NmeaDecoder::PushChar(char c, NavigationData *navData)
+void SRAM_USE NmeaDecoder::PushChar(char c, NavigationData *navData)
 {
 	if ((serialBuffer[0] != '$') || (c == '$'))
 	{
@@ -121,7 +121,7 @@ void NmeaDecoder::resetSentences()
 	sentenceWriteIndex = 0;
 }
 
-void NmeaDecoder::DecodeSentence(int sentenceIndex, NavigationData *navData)
+void SRAM_USE NmeaDecoder::DecodeSentence(int sentenceIndex, NavigationData *navData)
 {
 	if (sentenceBuffer[sentenceIndex][0] != '$')
 		return;
@@ -170,7 +170,7 @@ void NmeaDecoder::DecodeSentence(int sentenceIndex, NavigationData *navData)
 	return;
 }
 
-void NmeaDecoder::DecodeRMBSentence(char *sentence, NavigationData *navData)
+void SRAM_USE NmeaDecoder::DecodeRMBSentence(char *sentence, NavigationData *navData)
 {
 	float value;
 
@@ -224,7 +224,7 @@ void NmeaDecoder::DecodeRMBSentence(char *sentence, NavigationData *navData)
 	}
 }
 
-void NmeaDecoder::DecodeRMCSentence(char *sentence, NavigationData *navData)
+void SRAM_USE NmeaDecoder::DecodeRMCSentence(char *sentence, NavigationData *navData)
 {
 	if (sentence[0] != ',')
 	{
@@ -249,7 +249,7 @@ void NmeaDecoder::DecodeRMCSentence(char *sentence, NavigationData *navData)
 	}
 }
 
-void NmeaDecoder::DecodeGGASentence(char *sentence, NavigationData *navData)
+void SRAM_USE NmeaDecoder::DecodeGGASentence(char *sentence, NavigationData *navData)
 {
 	float degs, mins;
 
@@ -288,7 +288,7 @@ void NmeaDecoder::DecodeGGASentence(char *sentence, NavigationData *navData)
 	}
 }
 
-void NmeaDecoder::DecodeVTGSentence(char *sentence, NavigationData *navData)
+void SRAM_USE NmeaDecoder::DecodeVTGSentence(char *sentence, NavigationData *navData)
 {
 	float value;
 
@@ -312,7 +312,7 @@ void NmeaDecoder::DecodeVTGSentence(char *sentence, NavigationData *navData)
 	}
 }
 
-int16_t NmeaDecoder::NibbleValue(char c)
+int16_t SRAM_USE NmeaDecoder::NibbleValue(char c)
 {
 	if ((c >= '0') && (c <= '9'))
 	{

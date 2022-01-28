@@ -100,6 +100,11 @@ MenuEntry_t mainMenu[] =
 /*                              Functions                                  */
 /***************************************************************************/
 
+void SRAM_USE RfIsr()
+{
+	gRfReceiver.GDO0Callback();
+}
+
 void setup()
 {
 	// Load configuration from EEPROM
@@ -209,7 +214,7 @@ void loop()
 	firstLoop = false;
 }
 
-void SRAM_USE GNSS_CALLBACK()
+void GNSS_CALLBACK()
 {
 	// This callback is called each time we received data from the NMEA GNSS
 	while (GNSS_SERIAL.available() > 0)
@@ -218,11 +223,6 @@ void SRAM_USE GNSS_CALLBACK()
 		// to repeat it later to the console output.
 		gGnssDecoder.PushChar(GNSS_SERIAL.read(), &gNavData);
 	}
-}
-
-void SRAM_USE RfIsr()
-{
-	gRfReceiver.GDO0Callback();
 }
 
 void PrintByte(uint8_t data)

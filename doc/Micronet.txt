@@ -11,7 +11,7 @@ Raymarine/TackTick reseller.
 *** Radio specification ***
 ***************************
 
-Carrier frequency : 869.835MHz in Europe. Measured on my own TackTick network. I don't know is this frequency might change
+Carrier frequency : 869.840MHz in Europe. Measured on my own TackTick network. I don't know is this frequency might change
                     in some circumstance.
 Modulation : 2-FSK
 Deviation : +-38kHz
@@ -49,6 +49,7 @@ DT + DID = Device ID (4 bytes) - Unique number identifying the device sending th
 MI = Message ID (1 bytes) - Type of the message. Necessary for the receiver to know how to decode payload.
      0x01 Master Request
      0x02 Send Sync Data
+     0x03 Request Sync Data
      0x06 Set Parameter
      0x07 Acknowledge parameter
      0x0a ?

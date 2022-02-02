@@ -217,16 +217,18 @@ void SRAM_USE RfDriver::GDO0RxCallback()
 
 void SRAM_USE RfDriver::GDO0TxCallback()
 {
-	int bytesInFifo = 17; // Corresponds to the FIFO threshold of 0x0b
+	uint8_t bytearray[MICRONET_MAX_MESSAGE_LENGTH];
 
+	uint8_t bytesInFifo = 17; // Corresponds to the FIFO threshold of 0x0b
+
+	uint8_t i = 0;
 	while ((bytesInFifo < 62) && (messageBytesSent < messageToTransmit.len))
 	{
-		cc1101Driver.SpiWriteReg(CC1101_TXFIFO, messageToTransmit.data[messageBytesSent++]);
-//		messageBytesSent++;
+//		cc1101Driver.SpiWriteReg(CC1101_TXFIFO, messageToTransmit.data[messageBytesSent++]);
+		bytearray[i++] = messageToTransmit.data[messageBytesSent++];
 		bytesInFifo++;
 	}
-
-//	cc1101Driver.SpiWriteBurstReg(CC1101_TXFIFO, messageToTransmit.data, messageBytesSent);
+	cc1101Driver.SpiWriteBurstReg(CC1101_TXFIFO, bytearray, i);
 
 	if (messageBytesSent >= messageToTransmit.len)
 	{
@@ -285,7 +287,7 @@ void SRAM_USE RfDriver::TimerHandler(void *)
 
 void SRAM_USE RfDriver::TransmitCallback()
 {
-//	uint8_t bytearray[MICRONET_RF_PREAMBLE_LENGTH + 1];
+	uint8_t bytearray[MICRONET_RF_PREAMBLE_LENGTH + 1];
 
 	// Change CC1101 configuration for transmission
 	cc1101Driver.setSidle();
@@ -297,30 +299,29 @@ void SRAM_USE RfDriver::TransmitCallback()
 	// Fill FIFO with preamble + sync byte
 	int bytesInFifo = 0;
 	for (bytesInFifo = 0; bytesInFifo < MICRONET_RF_PREAMBLE_LENGTH; bytesInFifo++)
-		cc1101Driver.SpiWriteReg(CC1101_TXFIFO, 0x55);
-//		bytearray[bytesInFifo] = 0x55;
+//		cc1101Driver.SpiWriteReg(CC1101_TXFIFO, 0x55);
+		bytearray[bytesInFifo] = 0x55;
 
-	cc1101Driver.SpiWriteReg(CC1101_TXFIFO, MICRONET_RF_SYNC_BYTE);
-//	bytearray[bytesInFifo+1] = MICRONET_RF_SYNC_BYTE;
+//	cc1101Driver.SpiWriteReg(CC1101_TXFIFO, MICRONET_RF_SYNC_BYTE);
+	bytearray[bytesInFifo++] = MICRONET_RF_SYNC_BYTE;
 
-//	cc1101Driver.SpiWriteBurstReg(CC1101_TXFIFO, bytearray, bytesInFifo+1);
+	cc1101Driver.SpiWriteBurstReg(CC1101_TXFIFO, bytearray, bytesInFifo);
 
 //Serial.printf("%d\n", bytesInFifo);
 
 	messageBytesSent = 0;
 	while ((bytesInFifo < 62) && (messageBytesSent < messageToTransmit.len))
 	{
-		cc1101Driver.SpiWriteReg(CC1101_TXFIFO, messageToTransmit.data[messageBytesSent++]);
-//		messageBytesSent++;
+//		cc1101Driver.SpiWriteReg(CC1101_TXFIFO, messageToTransmit.data[messageBytesSent++]);
+		messageBytesSent++;
 		bytesInFifo++;
 	}
-//Serial.printf("%d\n", bytesInFifo);
 
+//Serial.printf("%d\n", bytesInFifo);
 //for (int i = 0; i < messageToTransmit.len; i++) Serial.printf("%02x", messageToTransmit.data[i]); Serial.printf("\n");
 
-//	cc1101Driver.SpiWriteBurstReg(CC1101_TXFIFO, messageToTransmit.data, messageBytesSent);
+	cc1101Driver.SpiWriteBurstReg(CC1101_TXFIFO, messageToTransmit.data, messageBytesSent);
 
-//Serial.printf("%d %d\n", messageBytesSent, messageToTransmit.len);
 	if (messageBytesSent < messageToTransmit.len)
 	{
 		rfState = RF_STATE_TX_TRANSMITTING;

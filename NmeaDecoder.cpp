@@ -106,7 +106,7 @@ void SRAM_USE NmeaDecoder::PushChar(char c, NavigationData *navData)
 	}
 }
 
-int NmeaDecoder::GetNbSentences()
+int SRAM_USE NmeaDecoder::GetNbSentences()
 {
 	return sentenceWriteIndex;
 }
@@ -116,7 +116,7 @@ const char* NmeaDecoder::GetSentence(int i)
 	return sentenceBuffer[i];
 }
 
-void NmeaDecoder::resetSentences()
+void SRAM_USE NmeaDecoder::resetSentences()
 {
 	sentenceWriteIndex = 0;
 }

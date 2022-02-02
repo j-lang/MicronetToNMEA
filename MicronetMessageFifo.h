@@ -31,9 +31,10 @@
 /*                              Includes                                   */
 /***************************************************************************/
 
-#include "Micronet.h"
 #include <Arduino.h>
 #include <stdint.h>
+#include "Micronet.h"
+#include "BoardConfig.h"
 
 /***************************************************************************/
 /*                              Constants                                  */
@@ -51,11 +52,11 @@ public:
 	MicronetMessageFifo();
 	virtual ~MicronetMessageFifo();
 
-	bool Push(MicronetMessage_t &message);
-	bool Pop(MicronetMessage_t *message);
-	MicronetMessage_t *Peek();
-	void DeleteMessage();
-	void ResetFifo();
+	bool SRAM_USE Push(MicronetMessage_t &message);
+	bool SRAM_USE Pop(MicronetMessage_t *message);
+	MicronetMessage_t SRAM_USE *Peek();
+	void SRAM_USE DeleteMessage();
+	void SRAM_USE ResetFifo();
 
 private:
 	int writeIndex;

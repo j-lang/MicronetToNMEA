@@ -33,6 +33,7 @@
 
 #include <Arduino.h>
 #include <stdint.h>
+#include "BoardConfig.h"
 #include "NavigationData.h"
 
 /***************************************************************************/
@@ -41,13 +42,6 @@
 
 #define NMEA_SENTENCE_MAX_LENGTH   96
 #define NMEA_SENTENCE_HISTORY_SIZE 24
-
-// ISR's should work from SRAM in ESP32
-#ifdef ESP32
-#define SRAM_USE IRAM_ATTR
-#elif TEENSYDUINO
-#define SRAM_USE
-#endif
 
 /***************************************************************************/
 /*                                Types                                    */
@@ -59,10 +53,10 @@ public:
 	NmeaDecoder();
 	virtual ~NmeaDecoder();
 
-	void PushChar(char c, NavigationData *navData);
-	int GetNbSentences();
+	void SRAM_USE PushChar(char c, NavigationData *navData);
+	int SRAM_USE GetNbSentences();
 	const char *GetSentence(int i);
-	void resetSentences();
+	void SRAM_USE resetSentences();
 
 private:
 	uint8_t serialBuffer[NMEA_SENTENCE_MAX_LENGTH];

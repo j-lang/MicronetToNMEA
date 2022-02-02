@@ -42,7 +42,7 @@
 // However, CC1101 produces 38 kHz deviation when requested 34 : problem of HW, Driver or measurement tools ?
 #define MICRONET_RF_DEVIATION_KHZ    34
 
-#define MICRONET_RF_PREAMBLE_LENGTH  14
+#define MICRONET_RF_PREAMBLE_LENGTH  15
 #define MICRONET_RF_SYNC_BYTE        0x99
 
 #define MICRONET_MAX_MESSAGE_LENGTH 96

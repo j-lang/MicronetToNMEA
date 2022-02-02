@@ -8,16 +8,10 @@
 #ifndef RFDRIVER_H_
 #define RFDRIVER_H_
 
+#include "BoardConfig.h"
 #include "Micronet.h"
 #include "MicronetMessageFifo.h"
 #include "ELECHOUSE_CC1101_SRC_DRV.h"
-
-// ISR's should work from SRAM in ESP32
-#ifdef ESP32
-#define SRAM_USE IRAM_ATTR
-#elif TEENSYDUINO
-#define SRAM_USE
-#endif
 
 typedef enum {
 	RF_STATE_RX_IDLE = 0,

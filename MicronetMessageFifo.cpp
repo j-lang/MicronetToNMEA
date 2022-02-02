@@ -62,7 +62,7 @@ MicronetMessageFifo::~MicronetMessageFifo()
 {
 }
 
-bool MicronetMessageFifo::Push(MicronetMessage_t &message)
+bool SRAM_USE MicronetMessageFifo::Push(MicronetMessage_t &message)
 {
 	// Disable interrupts to avoid race conditions
 	noInterrupts();
@@ -92,7 +92,7 @@ bool MicronetMessageFifo::Push(MicronetMessage_t &message)
 	return true;
 }
 
-bool MicronetMessageFifo::Pop(MicronetMessage_t *message)
+bool SRAM_USE MicronetMessageFifo::Pop(MicronetMessage_t *message)
 {
 	// Disable interrupts to avoid race conditions
 	noInterrupts();
@@ -120,7 +120,7 @@ bool MicronetMessageFifo::Pop(MicronetMessage_t *message)
 	return true;
 }
 
-MicronetMessage_t *MicronetMessageFifo::Peek()
+MicronetMessage_t SRAM_USE *MicronetMessageFifo::Peek()
 {
 	MicronetMessage_t *pMessage = nullptr;
 
@@ -138,7 +138,7 @@ MicronetMessage_t *MicronetMessageFifo::Peek()
 	return pMessage;
 }
 
-void MicronetMessageFifo::DeleteMessage()
+void SRAM_USE MicronetMessageFifo::DeleteMessage()
 {
 	noInterrupts();
 
@@ -157,7 +157,7 @@ void MicronetMessageFifo::DeleteMessage()
 	interrupts();
 }
 
-void MicronetMessageFifo::ResetFifo()
+void SRAM_USE MicronetMessageFifo::ResetFifo()
 {
 	noInterrupts();
 	readIndex = writeIndex;

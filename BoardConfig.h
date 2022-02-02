@@ -35,6 +35,13 @@
 /*                              Constants                                  */
 /***************************************************************************/
 
+// ISR's should work from SRAM in ESP32
+#ifdef ESP32
+#define SRAM_USE IRAM_ATTR
+#elif TEENSYDUINO
+#define SRAM_USE
+#endif
+
 // Selects on which I2C bus is connected compass as per Wiring library definition
 #define NAVCOMPASS_I2C Wire // SDA0: 18 SCL0: 19
 #ifdef ESP32
@@ -72,6 +79,7 @@
 #define GNSS_RX_PIN   0
 #define GNSS_TX_PIN   1
 #elif ESP32
+// USB-Serial0 RX0: GPIO3 TX0: GPIO1; Serial1 RX1: GPIO09 TX1: GPIO10; Serial2 RX2: GPIO16 TX2: GPIO17
 #define GNSS_SERIAL   Serial2
 #define GNSS_BAUDRATE 38400
 #define GNSS_CALLBACK serialEvent2

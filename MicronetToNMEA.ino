@@ -214,7 +214,7 @@ void loop()
 	firstLoop = false;
 }
 
-void GNSS_CALLBACK()
+void SRAM_USE GNSS_CALLBACK()
 {
 	// This callback is called each time we received data from the NMEA GNSS
 	while (GNSS_SERIAL.available() > 0)
@@ -539,7 +539,7 @@ void MenuAttachNetwork()
 	}
 }
 
-void MenuConvertToNmea()
+void SRAM_USE MenuConvertToNmea()
 {
 	bool exitNmeaLoop = false;
 	char nmeaSentence[256];
@@ -601,6 +601,7 @@ void MenuConvertToNmea()
 						gMicronetCodec.EncodeSlotRequestMessage(&txMessage, gConfiguration.networkId, gConfiguration.deviceId,
 								52);
 					}
+//Serial.printf("%d\n", txSlot.start_us);
 					gRfReceiver.TransmitMessage(&txMessage, txSlot.start_us);
 
 					if (gNmeaEncoder.EncodeMWV_R(&gNavData, nmeaSentence))

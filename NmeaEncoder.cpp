@@ -67,7 +67,7 @@ NmeaEncoder::~NmeaEncoder()
 {
 }
 
-bool NmeaEncoder::EncodeMWV_R(NavigationData *micronetData, char *sentence)
+bool IRAM_ATTR NmeaEncoder::EncodeMWV_R(NavigationData *micronetData, char *sentence)
 {
 	bool update = false;
 
@@ -89,7 +89,7 @@ bool NmeaEncoder::EncodeMWV_R(NavigationData *micronetData, char *sentence)
 	return update;
 }
 
-bool NmeaEncoder::EncodeMWV_T(NavigationData *micronetData, char *sentence)
+bool IRAM_ATTR NmeaEncoder::EncodeMWV_T(NavigationData *micronetData, char *sentence)
 {
 	bool update = false;
 
@@ -111,7 +111,7 @@ bool NmeaEncoder::EncodeMWV_T(NavigationData *micronetData, char *sentence)
 	return update;
 }
 
-bool NmeaEncoder::EncodeDPT(NavigationData *micronetData, char *sentence)
+bool IRAM_ATTR NmeaEncoder::EncodeDPT(NavigationData *micronetData, char *sentence)
 {
 	bool update = false;
 
@@ -129,7 +129,7 @@ bool NmeaEncoder::EncodeDPT(NavigationData *micronetData, char *sentence)
 	return update;
 }
 
-bool NmeaEncoder::EncodeMTW(NavigationData *micronetData, char *sentence)
+bool IRAM_ATTR NmeaEncoder::EncodeMTW(NavigationData *micronetData, char *sentence)
 {
 	bool update = false;
 
@@ -147,7 +147,7 @@ bool NmeaEncoder::EncodeMTW(NavigationData *micronetData, char *sentence)
 	return update;
 }
 
-bool NmeaEncoder::EncodeVLW(NavigationData *micronetData, char *sentence)
+bool IRAM_ATTR NmeaEncoder::EncodeVLW(NavigationData *micronetData, char *sentence)
 {
 	bool update = false;
 
@@ -166,7 +166,7 @@ bool NmeaEncoder::EncodeVLW(NavigationData *micronetData, char *sentence)
 	return update;
 }
 
-bool NmeaEncoder::EncodeVHW(NavigationData *micronetData, char *sentence)
+bool IRAM_ATTR NmeaEncoder::EncodeVHW(NavigationData *micronetData, char *sentence)
 {
 	bool update = false;
 
@@ -184,7 +184,7 @@ bool NmeaEncoder::EncodeVHW(NavigationData *micronetData, char *sentence)
 	return update;
 }
 
-uint8_t NmeaEncoder::AddNmeaChecksum(char *sentence)
+uint8_t IRAM_ATTR NmeaEncoder::AddNmeaChecksum(char *sentence)
 {
 	uint8_t crc = 0;
 	char crcString[8];

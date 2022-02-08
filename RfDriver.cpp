@@ -10,14 +10,8 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-#ifdef TEENSYDUINO
-#include <TeensyTimerTool.h>
-using namespace TeensyTimerTool;
-OneShotTimer timerInt;
-#elif ESP32
 #include <esp_timer.h>
 esp_timer_handle_t oneshot_timer; //variable to store the hardware timer handle
-#endif
 
 RfDriver *RfDriver::rfDriver;
 
@@ -42,19 +36,11 @@ bool RfDriver::Init(int gdo0Pin, MicronetMessageFifo *messageFifo, float frequen
 	this->messageFifo = messageFifo;
 	rfDriver = this;
 
-#ifdef TEENSYDUINO
-	timerInt.begin(TimerHandler);
-#elif ESP32
 	esp_timer_create_args_t oneshot_timer_args = {}; // initialize High Resolution Timer (HRT) configuration structure
 	oneshot_timer_args.callback = &TimerHandler; // configure for callback, name of callback function
 	esp_timer_create( &oneshot_timer_args, &oneshot_timer ); // assign configuration to the HRT, receive timer handle
-#endif
 
-#ifdef TEENSYDUINO
-	cc1101Driver.setClb(3, 17, 19); // 1. Modul (Ant. hoch)
-#elif ESP32
-	cc1101Driver.setClb(3, 21, 25); // 2. Modul (Ant. flach)
-#endif
+	cc1101Driver.setClb(3,35,41); // 2. Modul
 	cc1101Driver.Init();
 	cc1101Driver.setGDO0(gdo0Pin);
 	cc1101Driver.setCCMode(1); // set config for internal transmission mode.
@@ -82,9 +68,7 @@ bool RfDriver::Init(int gdo0Pin, MicronetMessageFifo *messageFifo, float frequen
 	cc1101Driver.setPQT(4); // Preamble quality estimator threshold. The preamble quality estimator increases an internal counter by one each time a bit is received that is different from the previous bit, and decreases the counter by 8 each time a bit is received that is the same as the last bit. A threshold of 4∙PQT for this counter is used to gate sync word detection. When PQT=0 a sync word is always accepted.
 	cc1101Driver.setAppendStatus(0); // When enabled, two status bytes will be appended to the payload of the packet. The status bytes contain RSSI and LQI values, as well as CRC OK.
 
-#ifdef ESP32
 	SPI.beginTransaction(SPISettings(7500000, MSBFIRST, SPI_MODE0));
-#endif
 
 	return true;
 }
@@ -109,7 +93,7 @@ void RfDriver::SetBandwidth(float bw_KHz)
 	cc1101Driver.setRxBW(bw_KHz);
 }
 
-void SRAM_USE RfDriver::GDO0Callback()
+void IRAM_ATTR RfDriver::GDO0Callback()
 {
 	if (rfState == RF_STATE_TX_TRANSMITTING)
 	{
@@ -125,7 +109,7 @@ void SRAM_USE RfDriver::GDO0Callback()
 	}
 }
 
-void SRAM_USE RfDriver::GDO0RxCallback()
+void IRAM_ATTR RfDriver::GDO0RxCallback()
 {
 	static MicronetMessage_t message;
 	static int dataOffset;
@@ -215,7 +199,7 @@ void SRAM_USE RfDriver::GDO0RxCallback()
 	messageFifo->Push(message);
 }
 
-void SRAM_USE RfDriver::GDO0TxCallback()
+void IRAM_ATTR RfDriver::GDO0TxCallback()
 {
 	uint8_t bytearray[MICRONET_MAX_MESSAGE_LENGTH];
 
@@ -237,14 +221,14 @@ void SRAM_USE RfDriver::GDO0TxCallback()
 	}
 }
 
-void SRAM_USE RfDriver::GDO0LastTxCallback()
+void IRAM_ATTR RfDriver::GDO0LastTxCallback()
 {
 	cc1101Driver.setSidle();
 	cc1101Driver.SpiStrobe(CC1101_SFTX);
 	RestartReception();
 }
 
-void SRAM_USE RfDriver::RestartReception()
+void IRAM_ATTR RfDriver::RestartReception()
 {
 	rfState = RF_STATE_RX_IDLE;
 	cc1101Driver.setSidle();
@@ -257,47 +241,37 @@ void SRAM_USE RfDriver::RestartReception()
 	cc1101Driver.SetRx();
 }
 
-void SRAM_USE RfDriver::TransmitMessage(MicronetMessage_t *message, uint32_t transmitTimeUs)
+void IRAM_ATTR RfDriver::TransmitMessage(MicronetMessage_t *message, uint32_t transmitTimeUs)
 {
 	messageToTransmit.len = message->len;
 	messageToTransmit.startTime_us = transmitTimeUs;
 	memcpy(messageToTransmit.data, message->data, message->len);
 
 	int32_t transmitDelay = transmitTimeUs - micros();
-//Serial.printf("%d\n", transmitDelay);
 	if (transmitDelay <= 0)
 	{
 		return;
 	}
-#ifdef TEENSYDUINO
-	timerInt.trigger(transmitDelay);
-#elif ESP32
 	esp_timer_start_once( oneshot_timer, (uint64_t) transmitDelay ); // trigger one shot timer
-#endif
 }
 
-#ifdef TEENSYDUINO
-void RfDriver::TimerHandler()
-#elif ESP32
-void SRAM_USE RfDriver::TimerHandler(void *)
-#endif
+void IRAM_ATTR RfDriver::TimerHandler(void *)
 {
 	rfDriver->TransmitCallback();
 }
 
-void SRAM_USE RfDriver::TransmitCallback()
+void IRAM_ATTR RfDriver::TransmitCallback()
 {
 	uint8_t bytearray[MICRONET_RF_PREAMBLE_LENGTH + 1];
 
 	// Change CC1101 configuration for transmission
 	cc1101Driver.setSidle();
-	cc1101Driver.setPA(12);
 	cc1101Driver.setSyncMode(0);
 	cc1101Driver.setLengthConfig(2);
 	cc1101Driver.SpiStrobe(CC1101_SFTX);
 
 	// Fill FIFO with preamble + sync byte
-	int bytesInFifo = 0;
+	uint8_t bytesInFifo = 0;
 	for (bytesInFifo = 0; bytesInFifo < MICRONET_RF_PREAMBLE_LENGTH; bytesInFifo++)
 //		cc1101Driver.SpiWriteReg(CC1101_TXFIFO, 0x55);
 		bytearray[bytesInFifo] = 0x55;
@@ -307,8 +281,6 @@ void SRAM_USE RfDriver::TransmitCallback()
 
 	cc1101Driver.SpiWriteBurstReg(CC1101_TXFIFO, bytearray, bytesInFifo);
 
-//Serial.printf("%d\n", bytesInFifo);
-
 	messageBytesSent = 0;
 	while ((bytesInFifo < 62) && (messageBytesSent < messageToTransmit.len))
 	{
@@ -316,9 +288,6 @@ void SRAM_USE RfDriver::TransmitCallback()
 		messageBytesSent++;
 		bytesInFifo++;
 	}
-
-//Serial.printf("%d\n", bytesInFifo);
-//for (int i = 0; i < messageToTransmit.len; i++) Serial.printf("%02x", messageToTransmit.data[i]); Serial.printf("\n");
 
 	cc1101Driver.SpiWriteBurstReg(CC1101_TXFIFO, messageToTransmit.data, messageBytesSent);
 

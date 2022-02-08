@@ -91,7 +91,7 @@ NavigationData::~NavigationData()
 {
 }
 
-void NavigationData::UpdateValidity()
+void IRAM_ATTR NavigationData::UpdateValidity()
 {
 	uint32_t currentTime = millis();
 

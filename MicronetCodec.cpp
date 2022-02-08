@@ -65,7 +65,7 @@ MicronetCodec::~MicronetCodec()
 {
 }
 
-uint32_t SRAM_USE MicronetCodec::GetNetworkId(MicronetMessage_t *message)
+uint32_t IRAM_ATTR MicronetCodec::GetNetworkId(MicronetMessage_t *message)
 {
 	unsigned int networkId;
 
@@ -77,12 +77,12 @@ uint32_t SRAM_USE MicronetCodec::GetNetworkId(MicronetMessage_t *message)
 	return networkId;
 }
 
-uint8_t SRAM_USE MicronetCodec::GetDeviceType(MicronetMessage_t *message)
+uint8_t IRAM_ATTR MicronetCodec::GetDeviceType(MicronetMessage_t *message)
 {
 	return message->data[MICRONET_DT_OFFSET];
 }
 
-uint32_t SRAM_USE MicronetCodec::GetDeviceId(MicronetMessage_t *message)
+uint32_t IRAM_ATTR MicronetCodec::GetDeviceId(MicronetMessage_t *message)
 {
 	unsigned int deviceId;
 
@@ -94,27 +94,27 @@ uint32_t SRAM_USE MicronetCodec::GetDeviceId(MicronetMessage_t *message)
 	return deviceId;
 }
 
-uint8_t SRAM_USE MicronetCodec::GetMessageId(MicronetMessage_t *message)
+uint8_t IRAM_ATTR MicronetCodec::GetMessageId(MicronetMessage_t *message)
 {
 	return message->data[MICRONET_MI_OFFSET];
 }
 
-uint8_t SRAM_USE MicronetCodec::GetSource(MicronetMessage_t *message)
+uint8_t IRAM_ATTR MicronetCodec::GetSource(MicronetMessage_t *message)
 {
 	return message->data[MICRONET_SO_OFFSET];
 }
 
-uint8_t SRAM_USE MicronetCodec::GetDestination(MicronetMessage_t *message)
+uint8_t IRAM_ATTR MicronetCodec::GetDestination(MicronetMessage_t *message)
 {
 	return message->data[MICRONET_DE_OFFSET];
 }
 
-uint8_t SRAM_USE MicronetCodec::GetHeaderCrc(MicronetMessage_t *message)
+uint8_t IRAM_ATTR MicronetCodec::GetHeaderCrc(MicronetMessage_t *message)
 {
 	return message->data[MICRONET_CRC_OFFSET];
 }
 
-bool SRAM_USE MicronetCodec::VerifyHeaderCrc(MicronetMessage_t *message)
+bool IRAM_ATTR MicronetCodec::VerifyHeaderCrc(MicronetMessage_t *message)
 {
 	if (message->len < 14)
 		return false;
@@ -131,7 +131,7 @@ bool SRAM_USE MicronetCodec::VerifyHeaderCrc(MicronetMessage_t *message)
 	return (crc == message->data[MICRONET_CRC_OFFSET]);
 }
 
-void SRAM_USE MicronetCodec::DecodeDataMessage(MicronetMessage_t *message, NavigationData *dataSet)
+void IRAM_ATTR MicronetCodec::DecodeDataMessage(MicronetMessage_t *message, NavigationData *dataSet)
 {
 	switch (message->data[MICRONET_MI_OFFSET])
 	{
@@ -144,7 +144,7 @@ void SRAM_USE MicronetCodec::DecodeDataMessage(MicronetMessage_t *message, Navig
 	}
 }
 
-void SRAM_USE MicronetCodec::DecodeSendDataMessage(MicronetMessage_t *message, NavigationData *dataSet)
+void IRAM_ATTR MicronetCodec::DecodeSendDataMessage(MicronetMessage_t *message, NavigationData *dataSet)
 {
 	int fieldOffset = MICRONET_PAYLOAD_OFFSET;
 	while (fieldOffset < message->len)
@@ -158,7 +158,7 @@ void SRAM_USE MicronetCodec::DecodeSendDataMessage(MicronetMessage_t *message, N
 	CalculateTrueWind(dataSet);
 }
 
-void SRAM_USE MicronetCodec::DecodeSetParameterMessage(MicronetMessage_t *message, NavigationData *dataSet)
+void IRAM_ATTR MicronetCodec::DecodeSetParameterMessage(MicronetMessage_t *message, NavigationData *dataSet)
 {
 	switch (message->data[MICRONET_PAYLOAD_OFFSET + 1])
 	{
@@ -234,7 +234,7 @@ void SRAM_USE MicronetCodec::DecodeSetParameterMessage(MicronetMessage_t *messag
 	}
 }
 
-int SRAM_USE MicronetCodec::DecodeDataField(MicronetMessage_t *message, int offset, NavigationData *dataSet)
+int IRAM_ATTR MicronetCodec::DecodeDataField(MicronetMessage_t *message, int offset, NavigationData *dataSet)
 {
 	int8_t value8;
 	int16_t value16;
@@ -293,7 +293,7 @@ int SRAM_USE MicronetCodec::DecodeDataField(MicronetMessage_t *message, int offs
 	return offset + message->data[offset] + 2;
 }
 
-void SRAM_USE MicronetCodec::UpdateMicronetData(uint8_t fieldId, int8_t value, NavigationData *dataSet)
+void IRAM_ATTR MicronetCodec::UpdateMicronetData(uint8_t fieldId, int8_t value, NavigationData *dataSet)
 {
 	switch (fieldId)
 	{
@@ -305,7 +305,7 @@ void SRAM_USE MicronetCodec::UpdateMicronetData(uint8_t fieldId, int8_t value, N
 	}
 }
 
-void SRAM_USE MicronetCodec::UpdateMicronetData(uint8_t fieldId, int16_t value, NavigationData *dataSet)
+void IRAM_ATTR MicronetCodec::UpdateMicronetData(uint8_t fieldId, int16_t value, NavigationData *dataSet)
 {
 	float newValue;
 
@@ -351,7 +351,7 @@ void SRAM_USE MicronetCodec::UpdateMicronetData(uint8_t fieldId, int16_t value, 
 	}
 }
 
-void SRAM_USE MicronetCodec::UpdateMicronetData(uint8_t fieldId, int32_t value1, int32_t value2, NavigationData *dataSet)
+void IRAM_ATTR MicronetCodec::UpdateMicronetData(uint8_t fieldId, int32_t value1, int32_t value2, NavigationData *dataSet)
 {
 	switch (fieldId)
 	{
@@ -366,7 +366,7 @@ void SRAM_USE MicronetCodec::UpdateMicronetData(uint8_t fieldId, int32_t value1,
 	}
 }
 
-void SRAM_USE MicronetCodec::CalculateTrueWind(NavigationData *dataSet)
+void IRAM_ATTR MicronetCodec::CalculateTrueWind(NavigationData *dataSet)
 {
 	if ((dataSet->awa_deg.valid) && (dataSet->aws_kt.valid) && (dataSet->stw_kt.valid))
 	{
@@ -389,7 +389,7 @@ void SRAM_USE MicronetCodec::CalculateTrueWind(NavigationData *dataSet)
 	}
 }
 
-uint8_t SRAM_USE MicronetCodec::EncodeDataMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId,
+uint8_t IRAM_ATTR MicronetCodec::EncodeDataMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId,
 		NavigationData *navData)
 {
 	int offset = 0;
@@ -464,7 +464,7 @@ uint8_t SRAM_USE MicronetCodec::EncodeDataMessage(MicronetMessage_t *message, ui
 	return offset - MICRONET_PAYLOAD_OFFSET;
 }
 
-uint8_t SRAM_USE MicronetCodec::EncodeNavMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId,
+uint8_t IRAM_ATTR MicronetCodec::EncodeNavMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId,
 		NavigationData *navData)
 {
 	int offset = 0;
@@ -517,7 +517,7 @@ uint8_t SRAM_USE MicronetCodec::EncodeNavMessage(MicronetMessage_t *message, uin
 	return offset - MICRONET_PAYLOAD_OFFSET;
 }
 
-uint8_t SRAM_USE MicronetCodec::EncodeGnssMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId,
+uint8_t IRAM_ATTR MicronetCodec::EncodeGnssMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId,
 		NavigationData *navData)
 {
 	int offset = 0;
@@ -576,7 +576,7 @@ uint8_t SRAM_USE MicronetCodec::EncodeGnssMessage(MicronetMessage_t *message, ui
 	return offset - MICRONET_PAYLOAD_OFFSET;
 }
 
-uint8_t SRAM_USE MicronetCodec::EncodeSlotUpdateMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId,
+uint8_t IRAM_ATTR MicronetCodec::EncodeSlotUpdateMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId,
 		uint8_t payloadLength)
 {
 	int offset = 0;
@@ -617,7 +617,7 @@ uint8_t SRAM_USE MicronetCodec::EncodeSlotUpdateMessage(MicronetMessage_t *messa
 	return offset - MICRONET_PAYLOAD_OFFSET;
 }
 
-uint8_t SRAM_USE MicronetCodec::EncodeSlotRequestMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId,
+uint8_t IRAM_ATTR MicronetCodec::EncodeSlotRequestMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId,
 		uint8_t payloadLength)
 {
 	int offset = 0;
@@ -659,7 +659,7 @@ uint8_t SRAM_USE MicronetCodec::EncodeSlotRequestMessage(MicronetMessage_t *mess
 	return offset - MICRONET_PAYLOAD_OFFSET;
 }
 
-uint8_t SRAM_USE MicronetCodec::EncodeResetMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId)
+uint8_t IRAM_ATTR MicronetCodec::EncodeResetMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId)
 {
 	int offset = 0;
 
@@ -703,7 +703,7 @@ uint8_t SRAM_USE MicronetCodec::EncodeResetMessage(MicronetMessage_t *message, u
 	return offset - MICRONET_PAYLOAD_OFFSET;
 }
 
-void SRAM_USE MicronetCodec::WriteHeaderLengthAndCrc(MicronetMessage_t *message)
+void IRAM_ATTR MicronetCodec::WriteHeaderLengthAndCrc(MicronetMessage_t *message)
 {
 	message->data[MICRONET_LEN_OFFSET_1] = message->len - 2;
 	message->data[MICRONET_LEN_OFFSET_2] = message->len - 2;
@@ -717,7 +717,7 @@ void SRAM_USE MicronetCodec::WriteHeaderLengthAndCrc(MicronetMessage_t *message)
 	message->data[MICRONET_CRC_OFFSET] = crc;
 }
 
-uint8_t SRAM_USE MicronetCodec::Add16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value)
+uint8_t IRAM_ATTR MicronetCodec::Add16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value)
 {
 	int offset = 0;
 
@@ -738,7 +738,7 @@ uint8_t SRAM_USE MicronetCodec::Add16bitField(uint8_t *buffer, uint8_t fieldCode
 	return offset;
 }
 
-uint8_t SRAM_USE MicronetCodec::Add24bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value)
+uint8_t IRAM_ATTR MicronetCodec::Add24bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value)
 {
 	int offset = 0;
 
@@ -760,7 +760,7 @@ uint8_t SRAM_USE MicronetCodec::Add24bitField(uint8_t *buffer, uint8_t fieldCode
 	return offset;
 }
 
-uint8_t SRAM_USE MicronetCodec::AddDual16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value1, int16_t value2)
+uint8_t IRAM_ATTR MicronetCodec::AddDual16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value1, int16_t value2)
 {
 	int offset = 0;
 
@@ -783,7 +783,7 @@ uint8_t SRAM_USE MicronetCodec::AddDual16bitField(uint8_t *buffer, uint8_t field
 	return offset;
 }
 
-uint8_t SRAM_USE MicronetCodec::AddQuad16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value1, int16_t value2, int16_t value3,
+uint8_t IRAM_ATTR MicronetCodec::AddQuad16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value1, int16_t value2, int16_t value3,
 		int16_t value4)
 {
 	int offset = 0;
@@ -811,7 +811,7 @@ uint8_t SRAM_USE MicronetCodec::AddQuad16bitField(uint8_t *buffer, uint8_t field
 	return offset;
 }
 
-uint8_t SRAM_USE MicronetCodec::Add32bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value)
+uint8_t IRAM_ATTR MicronetCodec::Add32bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value)
 {
 	int offset = 0;
 
@@ -834,7 +834,7 @@ uint8_t SRAM_USE MicronetCodec::Add32bitField(uint8_t *buffer, uint8_t fieldCode
 	return offset;
 }
 
-uint8_t SRAM_USE MicronetCodec::AddDual32bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value1, int32_t value2)
+uint8_t IRAM_ATTR MicronetCodec::AddDual32bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value1, int32_t value2)
 {
 	int offset = 0;
 
@@ -861,7 +861,7 @@ uint8_t SRAM_USE MicronetCodec::AddDual32bitField(uint8_t *buffer, uint8_t field
 	return offset;
 }
 
-uint8_t SRAM_USE MicronetCodec::AddPositionField(uint8_t *buffer, float latitude, float longitude)
+uint8_t IRAM_ATTR MicronetCodec::AddPositionField(uint8_t *buffer, float latitude, float longitude)
 {
 	int offset = 0;
 	uint8_t dir = 0x0;
@@ -904,7 +904,7 @@ uint8_t SRAM_USE MicronetCodec::AddPositionField(uint8_t *buffer, float latitude
 	return offset;
 }
 
-bool SRAM_USE MicronetCodec::GetNetworkMap(MicronetMessage_t *message, NetworkMap_t *networkMap)
+bool IRAM_ATTR MicronetCodec::GetNetworkMap(MicronetMessage_t *message, NetworkMap_t *networkMap)
 {
 	uint32_t messageLength = message->len;
 	uint32_t offset;
@@ -976,7 +976,7 @@ bool SRAM_USE MicronetCodec::GetNetworkMap(MicronetMessage_t *message, NetworkMa
 	return true;
 }
 
-TxSlotDesc_t SRAM_USE MicronetCodec::GetSyncTransmissionSlot(MicronetMessage_t *message, uint32_t deviceId)
+TxSlotDesc_t IRAM_ATTR MicronetCodec::GetSyncTransmissionSlot(MicronetMessage_t *message, uint32_t deviceId)
 {
 	uint32_t messageLength = message->len;
 	uint32_t offset;
@@ -1023,7 +1023,7 @@ TxSlotDesc_t SRAM_USE MicronetCodec::GetSyncTransmissionSlot(MicronetMessage_t *
 	{	0,0,0,0};
 }
 
-TxSlotDesc_t SRAM_USE MicronetCodec::GetAsyncTransmissionSlot(MicronetMessage_t *message)
+TxSlotDesc_t IRAM_ATTR MicronetCodec::GetAsyncTransmissionSlot(MicronetMessage_t *message)
 {
 	uint32_t messageLength = message->len;
 	uint32_t offset;

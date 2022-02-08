@@ -59,7 +59,7 @@
 /*                           Local prototypes                              */
 /***************************************************************************/
 
-void SRAM_USE RfIsr();
+void IRAM_ATTR RfIsr();
 void PrintByte(uint8_t data);
 void PrintInt(uint32_t data);
 void PrintRawMessage(MicronetMessage_t *message, uint32_t lastMasterRequest_us);
@@ -100,7 +100,7 @@ MenuEntry_t mainMenu[] =
 /*                              Functions                                  */
 /***************************************************************************/
 
-void SRAM_USE RfIsr()
+void IRAM_ATTR RfIsr()
 {
 	gRfReceiver.GDO0Callback();
 }
@@ -108,9 +108,7 @@ void SRAM_USE RfIsr()
 void setup()
 {
 	// Load configuration from EEPROM
-#ifdef ESP32
 	gConfiguration.OpenEeprom();
-#endif
 	gConfiguration.LoadFromEeprom();
 	LoadCalibration();
 
@@ -118,22 +116,10 @@ void setup()
 	USB_CONSOLE.begin(USB_BAUDRATE);
 
 	// Init GNSS NMEA serial link
-#ifdef TEENSYDUINO
-	GNSS_SERIAL.setRX(GNSS_RX_PIN);
-	GNSS_SERIAL.setTX(GNSS_TX_PIN);
-	GNSS_SERIAL.begin(GNSS_BAUDRATE);
-#elif ESP32
 	GNSS_SERIAL.begin(GNSS_BAUDRATE, SERIAL_8N1, GNSS_RX_PIN, GNSS_TX_PIN);
-#endif
 
 	// Init wired serial link
-#ifdef TEENSYDUINO
-	WIRED_SERIAL.setRX(WIRED_RX_PIN);
-	WIRED_SERIAL.setTX(WIRED_TX_PIN);
-	WIRED_SERIAL.begin(WIRED_BAUDRATE);
-#elif ESP32
 	WIRED_SERIAL.begin(WIRED_BAUDRATE, SERIAL_8N1, WIRED_RX_PIN, WIRED_TX_PIN);
-#endif
 
 	// Let time for serial drivers to set-up
 	delay(250);
@@ -142,12 +128,6 @@ void setup()
 	gMenuManager.SetMenu(mainMenu);
 
 	// Set SPI pin configuration
-#ifdef TEENSYDUINO
-	SPI.setMOSI(MOSI_PIN);
-	SPI.setMISO(MISO_PIN);
-	SPI.setSCK(SCK_PIN);
-	SPI.setCS(CS0_PIN);
-#endif
 	SPI.begin();
 
 	CONSOLE.print("Initializing CC1101 ... ");
@@ -214,7 +194,7 @@ void loop()
 	firstLoop = false;
 }
 
-void SRAM_USE GNSS_CALLBACK()
+void IRAM_ATTR GNSS_CALLBACK()
 {
 	// This callback is called each time we received data from the NMEA GNSS
 	while (GNSS_SERIAL.available() > 0)
@@ -539,7 +519,7 @@ void MenuAttachNetwork()
 	}
 }
 
-void SRAM_USE MenuConvertToNmea()
+void IRAM_ATTR MenuConvertToNmea()
 {
 	bool exitNmeaLoop = false;
 	char nmeaSentence[256];
@@ -603,7 +583,6 @@ void SRAM_USE MenuConvertToNmea()
 					}
 //Serial.printf("%d\n", txSlot.start_us);
 					gRfReceiver.TransmitMessage(&txMessage, txSlot.start_us);
-
 					if (gNmeaEncoder.EncodeMWV_R(&gNavData, nmeaSentence))
 						NMEA_OUT.print(nmeaSentence);
 					if (gNmeaEncoder.EncodeMWV_T(&gNavData, nmeaSentence))
@@ -641,7 +620,7 @@ void SRAM_USE MenuConvertToNmea()
 		while (NMEA_IN.available() > 0)
 		{
 			c = NMEA_IN.read();
-			if ((CONSOLE == NMEA_IN) && (c == 0x1b))
+			if ((CONSOLE == NMEA_IN) && (c == 0x1b)) //ESC
 			{
 				CONSOLE.println("ESC key pressed, stopping conversion.");
 				exitNmeaLoop = true;

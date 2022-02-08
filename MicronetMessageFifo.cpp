@@ -62,7 +62,7 @@ MicronetMessageFifo::~MicronetMessageFifo()
 {
 }
 
-bool SRAM_USE MicronetMessageFifo::Push(MicronetMessage_t &message)
+bool IRAM_ATTR MicronetMessageFifo::Push(MicronetMessage_t &message)
 {
 	// Disable interrupts to avoid race conditions
 	noInterrupts();
@@ -92,7 +92,7 @@ bool SRAM_USE MicronetMessageFifo::Push(MicronetMessage_t &message)
 	return true;
 }
 
-bool SRAM_USE MicronetMessageFifo::Pop(MicronetMessage_t *message)
+bool IRAM_ATTR MicronetMessageFifo::Pop(MicronetMessage_t *message)
 {
 	// Disable interrupts to avoid race conditions
 	noInterrupts();
@@ -120,13 +120,14 @@ bool SRAM_USE MicronetMessageFifo::Pop(MicronetMessage_t *message)
 	return true;
 }
 
-MicronetMessage_t SRAM_USE *MicronetMessageFifo::Peek()
+MicronetMessage_t IRAM_ATTR *MicronetMessageFifo::Peek()
 {
 	MicronetMessage_t *pMessage = nullptr;
 
 	// Disable interrupts to avoid race conditions
 	noInterrupts();
 
+//Serial.println(nbMessages);
 	// Are there messages in the store ?
 	if (nbMessages > 0)
 	{
@@ -138,7 +139,7 @@ MicronetMessage_t SRAM_USE *MicronetMessageFifo::Peek()
 	return pMessage;
 }
 
-void SRAM_USE MicronetMessageFifo::DeleteMessage()
+void IRAM_ATTR MicronetMessageFifo::DeleteMessage()
 {
 	noInterrupts();
 
@@ -157,7 +158,7 @@ void SRAM_USE MicronetMessageFifo::DeleteMessage()
 	interrupts();
 }
 
-void SRAM_USE MicronetMessageFifo::ResetFifo()
+void IRAM_ATTR MicronetMessageFifo::ResetFifo()
 {
 	noInterrupts();
 	readIndex = writeIndex;

@@ -74,42 +74,42 @@ public:
 	MicronetCodec();
 	virtual ~MicronetCodec();
 
-	uint32_t SRAM_USE GetNetworkId(MicronetMessage_t *message);
-	uint8_t SRAM_USE GetDeviceType(MicronetMessage_t *message);
-	uint32_t SRAM_USE GetDeviceId(MicronetMessage_t *message);
-	uint8_t SRAM_USE GetMessageId(MicronetMessage_t *message);
-	uint8_t SRAM_USE GetSource(MicronetMessage_t *message);
-	uint8_t SRAM_USE GetDestination(MicronetMessage_t *message);
-	uint8_t SRAM_USE GetHeaderCrc(MicronetMessage_t *message);
-	bool SRAM_USE VerifyHeaderCrc(MicronetMessage_t *message);
+	uint32_t IRAM_ATTR GetNetworkId(MicronetMessage_t *message);
+	uint8_t IRAM_ATTR GetDeviceType(MicronetMessage_t *message);
+	uint32_t IRAM_ATTR GetDeviceId(MicronetMessage_t *message);
+	uint8_t IRAM_ATTR GetMessageId(MicronetMessage_t *message);
+	uint8_t IRAM_ATTR GetSource(MicronetMessage_t *message);
+	uint8_t IRAM_ATTR GetDestination(MicronetMessage_t *message);
+	uint8_t IRAM_ATTR GetHeaderCrc(MicronetMessage_t *message);
+	bool IRAM_ATTR VerifyHeaderCrc(MicronetMessage_t *message);
 
-	void SRAM_USE DecodeDataMessage(MicronetMessage_t *message, NavigationData *dataSet);
-	bool SRAM_USE GetNetworkMap(MicronetMessage_t *message, NetworkMap_t *networkMap);
-	TxSlotDesc_t SRAM_USE GetSyncTransmissionSlot(MicronetMessage_t *message, uint32_t deviceId);
-	TxSlotDesc_t SRAM_USE GetAsyncTransmissionSlot(MicronetMessage_t *message);
-	uint8_t SRAM_USE EncodeDataMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId, NavigationData *navData);
-	uint8_t SRAM_USE EncodeGnssMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId, NavigationData *navData);
-	uint8_t SRAM_USE EncodeNavMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId, NavigationData *navData);
-	uint8_t SRAM_USE EncodeSlotRequestMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId, uint8_t payloadLength);
-	uint8_t SRAM_USE EncodeSlotUpdateMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId, uint8_t payloadLength);
-	uint8_t SRAM_USE EncodeResetMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId);
+	void IRAM_ATTR DecodeDataMessage(MicronetMessage_t *message, NavigationData *dataSet);
+	bool IRAM_ATTR GetNetworkMap(MicronetMessage_t *message, NetworkMap_t *networkMap);
+	TxSlotDesc_t IRAM_ATTR GetSyncTransmissionSlot(MicronetMessage_t *message, uint32_t deviceId);
+	TxSlotDesc_t IRAM_ATTR GetAsyncTransmissionSlot(MicronetMessage_t *message);
+	uint8_t IRAM_ATTR EncodeDataMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId, NavigationData *navData);
+	uint8_t IRAM_ATTR EncodeGnssMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId, NavigationData *navData);
+	uint8_t IRAM_ATTR EncodeNavMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId, NavigationData *navData);
+	uint8_t IRAM_ATTR EncodeSlotRequestMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId, uint8_t payloadLength);
+	uint8_t IRAM_ATTR EncodeSlotUpdateMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId, uint8_t payloadLength);
+	uint8_t IRAM_ATTR EncodeResetMessage(MicronetMessage_t *message, uint32_t networkId, uint32_t deviceId);
 
 private:
-	void SRAM_USE DecodeSendDataMessage(MicronetMessage_t *message, NavigationData *dataSet);
-	void SRAM_USE DecodeSetParameterMessage(MicronetMessage_t *message, NavigationData *dataSet);
-	int SRAM_USE DecodeDataField(MicronetMessage_t *message, int offset, NavigationData *dataSet);
-	void SRAM_USE UpdateMicronetData(uint8_t fieldId, int8_t value, NavigationData *dataSet);
-	void SRAM_USE UpdateMicronetData(uint8_t fieldId, int16_t value, NavigationData *dataSet);
-	void SRAM_USE UpdateMicronetData(uint8_t fieldId, int32_t value1, int32_t value2, NavigationData *dataSet);
-	void SRAM_USE CalculateTrueWind(NavigationData *dataSet);
-	void SRAM_USE WriteHeaderLengthAndCrc(MicronetMessage_t *message);
-	uint8_t SRAM_USE AddPositionField(uint8_t *buffer, float latitude, float longitude);
-	uint8_t SRAM_USE Add16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value);
-	uint8_t SRAM_USE AddDual16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value1, int16_t value2);
-	uint8_t SRAM_USE AddQuad16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value1, int16_t value2, int16_t value3, int16_t value4);
-	uint8_t SRAM_USE AddDual32bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value1, int32_t value2);
-	uint8_t SRAM_USE Add24bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value);
-	uint8_t SRAM_USE Add32bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value);
+	void IRAM_ATTR DecodeSendDataMessage(MicronetMessage_t *message, NavigationData *dataSet);
+	void IRAM_ATTR DecodeSetParameterMessage(MicronetMessage_t *message, NavigationData *dataSet);
+	int IRAM_ATTR DecodeDataField(MicronetMessage_t *message, int offset, NavigationData *dataSet);
+	void IRAM_ATTR UpdateMicronetData(uint8_t fieldId, int8_t value, NavigationData *dataSet);
+	void IRAM_ATTR UpdateMicronetData(uint8_t fieldId, int16_t value, NavigationData *dataSet);
+	void IRAM_ATTR UpdateMicronetData(uint8_t fieldId, int32_t value1, int32_t value2, NavigationData *dataSet);
+	void IRAM_ATTR CalculateTrueWind(NavigationData *dataSet);
+	void IRAM_ATTR WriteHeaderLengthAndCrc(MicronetMessage_t *message);
+	uint8_t IRAM_ATTR AddPositionField(uint8_t *buffer, float latitude, float longitude);
+	uint8_t IRAM_ATTR Add16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value);
+	uint8_t IRAM_ATTR AddDual16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value1, int16_t value2);
+	uint8_t IRAM_ATTR AddQuad16bitField(uint8_t *buffer, uint8_t fieldCode, int16_t value1, int16_t value2, int16_t value3, int16_t value4);
+	uint8_t IRAM_ATTR AddDual32bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value1, int32_t value2);
+	uint8_t IRAM_ATTR Add24bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value);
+	uint8_t IRAM_ATTR Add32bitField(uint8_t *buffer, uint8_t fieldCode, int32_t value);
 };
 
 /***************************************************************************/

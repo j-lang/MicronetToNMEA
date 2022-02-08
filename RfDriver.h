@@ -31,9 +31,9 @@ public:
 	void SetFrequency(float freqMHz);
 	void SetDeviation(float freqKHz);
 	void SetBandwidth(float bwKHz);
-	void SRAM_USE GDO0Callback();
-	void SRAM_USE RestartReception();
-	void SRAM_USE TransmitMessage(MicronetMessage_t *message, uint32_t transmitTimeUs);
+	void IRAM_ATTR GDO0Callback();
+	void IRAM_ATTR RestartReception();
+	void IRAM_ATTR TransmitMessage(MicronetMessage_t *message, uint32_t transmitTimeUs);
 
 private:
 	int gdo0Pin;
@@ -44,15 +44,11 @@ private:
 	int messageBytesSent;
 	float frequencyOffset_mHz;
 
-	void SRAM_USE GDO0RxCallback();
-	void SRAM_USE GDO0TxCallback();
-	void SRAM_USE GDO0LastTxCallback();
-	void SRAM_USE TransmitCallback();
-#ifdef TEENSYDUINO
-	static void TimerHandler();
-#elif ESP32
-  static void SRAM_USE TimerHandler(void *);
-#endif
+	void IRAM_ATTR GDO0RxCallback();
+	void IRAM_ATTR GDO0TxCallback();
+	void IRAM_ATTR GDO0LastTxCallback();
+	void IRAM_ATTR TransmitCallback();
+	static void IRAM_ATTR TimerHandler(void *);
 	static RfDriver *rfDriver;
 };
 

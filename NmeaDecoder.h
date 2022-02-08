@@ -53,10 +53,10 @@ public:
 	NmeaDecoder();
 	virtual ~NmeaDecoder();
 
-	void SRAM_USE PushChar(char c, NavigationData *navData);
-	int SRAM_USE GetNbSentences();
+	void IRAM_ATTR PushChar(char c, NavigationData *navData);
+	int IRAM_ATTR GetNbSentences();
 	const char *GetSentence(int i);
-	void SRAM_USE resetSentences();
+	void IRAM_ATTR resetSentences();
 
 private:
 	uint8_t serialBuffer[NMEA_SENTENCE_MAX_LENGTH];
@@ -64,12 +64,12 @@ private:
 	char sentenceBuffer[NMEA_SENTENCE_HISTORY_SIZE][NMEA_SENTENCE_MAX_LENGTH];
 	int sentenceWriteIndex;
 
-	void SRAM_USE DecodeSentence(int sentenceIndex, NavigationData *navData);
-	void SRAM_USE DecodeRMBSentence(char *sentence, NavigationData *navData);
-	void SRAM_USE DecodeRMCSentence(char *sentence, NavigationData *navData);
-	void SRAM_USE DecodeGGASentence(char *sentence, NavigationData *navData);
-	void SRAM_USE DecodeVTGSentence(char *sentence, NavigationData *navData);
-	int16_t SRAM_USE NibbleValue(char c);
+	void IRAM_ATTR DecodeSentence(int sentenceIndex, NavigationData *navData);
+	void IRAM_ATTR DecodeRMBSentence(char *sentence, NavigationData *navData);
+	void IRAM_ATTR DecodeRMCSentence(char *sentence, NavigationData *navData);
+	void IRAM_ATTR DecodeGGASentence(char *sentence, NavigationData *navData);
+	void IRAM_ATTR DecodeVTGSentence(char *sentence, NavigationData *navData);
+	int16_t IRAM_ATTR NibbleValue(char c);
 };
 
 /***************************************************************************/

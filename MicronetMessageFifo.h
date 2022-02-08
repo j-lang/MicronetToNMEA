@@ -52,11 +52,11 @@ public:
 	MicronetMessageFifo();
 	virtual ~MicronetMessageFifo();
 
-	bool SRAM_USE Push(MicronetMessage_t &message);
-	bool SRAM_USE Pop(MicronetMessage_t *message);
-	MicronetMessage_t SRAM_USE *Peek();
-	void SRAM_USE DeleteMessage();
-	void SRAM_USE ResetFifo();
+	bool IRAM_ATTR Push(MicronetMessage_t &message);
+	bool IRAM_ATTR Pop(MicronetMessage_t *message);
+	MicronetMessage_t IRAM_ATTR *Peek();
+	void IRAM_ATTR DeleteMessage();
+	void IRAM_ATTR ResetFifo();
 
 private:
 	int writeIndex;

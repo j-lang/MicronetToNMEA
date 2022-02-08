@@ -69,8 +69,9 @@ NmeaDecoder::~NmeaDecoder()
 {
 }
 
-void SRAM_USE NmeaDecoder::PushChar(char c, NavigationData *navData)
+void IRAM_ATTR NmeaDecoder::PushChar(char c, NavigationData *navData)
 {
+//Serial.printf("%c", c);
 	if ((serialBuffer[0] != '$') || (c == '$'))
 	{
 		serialBuffer[0] = c;
@@ -78,7 +79,7 @@ void SRAM_USE NmeaDecoder::PushChar(char c, NavigationData *navData)
 		return;
 	}
 
-	if (c == 13)
+	if (c == 13) //CR
 	{
 		if ((writeIndex >= 10) && (sentenceWriteIndex < NMEA_SENTENCE_HISTORY_SIZE))
 		{
@@ -106,7 +107,7 @@ void SRAM_USE NmeaDecoder::PushChar(char c, NavigationData *navData)
 	}
 }
 
-int SRAM_USE NmeaDecoder::GetNbSentences()
+int IRAM_ATTR NmeaDecoder::GetNbSentences()
 {
 	return sentenceWriteIndex;
 }
@@ -116,12 +117,12 @@ const char* NmeaDecoder::GetSentence(int i)
 	return sentenceBuffer[i];
 }
 
-void SRAM_USE NmeaDecoder::resetSentences()
+void IRAM_ATTR NmeaDecoder::resetSentences()
 {
 	sentenceWriteIndex = 0;
 }
 
-void SRAM_USE NmeaDecoder::DecodeSentence(int sentenceIndex, NavigationData *navData)
+void IRAM_ATTR NmeaDecoder::DecodeSentence(int sentenceIndex, NavigationData *navData)
 {
 	if (sentenceBuffer[sentenceIndex][0] != '$')
 		return;
@@ -170,7 +171,7 @@ void SRAM_USE NmeaDecoder::DecodeSentence(int sentenceIndex, NavigationData *nav
 	return;
 }
 
-void SRAM_USE NmeaDecoder::DecodeRMBSentence(char *sentence, NavigationData *navData)
+void IRAM_ATTR NmeaDecoder::DecodeRMBSentence(char *sentence, NavigationData *navData)
 {
 	float value;
 
@@ -224,7 +225,7 @@ void SRAM_USE NmeaDecoder::DecodeRMBSentence(char *sentence, NavigationData *nav
 	}
 }
 
-void SRAM_USE NmeaDecoder::DecodeRMCSentence(char *sentence, NavigationData *navData)
+void IRAM_ATTR NmeaDecoder::DecodeRMCSentence(char *sentence, NavigationData *navData)
 {
 	if (sentence[0] != ',')
 	{
@@ -249,7 +250,7 @@ void SRAM_USE NmeaDecoder::DecodeRMCSentence(char *sentence, NavigationData *nav
 	}
 }
 
-void SRAM_USE NmeaDecoder::DecodeGGASentence(char *sentence, NavigationData *navData)
+void IRAM_ATTR NmeaDecoder::DecodeGGASentence(char *sentence, NavigationData *navData)
 {
 	float degs, mins;
 
@@ -288,7 +289,7 @@ void SRAM_USE NmeaDecoder::DecodeGGASentence(char *sentence, NavigationData *nav
 	}
 }
 
-void SRAM_USE NmeaDecoder::DecodeVTGSentence(char *sentence, NavigationData *navData)
+void IRAM_ATTR NmeaDecoder::DecodeVTGSentence(char *sentence, NavigationData *navData)
 {
 	float value;
 
@@ -312,7 +313,7 @@ void SRAM_USE NmeaDecoder::DecodeVTGSentence(char *sentence, NavigationData *nav
 	}
 }
 
-int16_t SRAM_USE NmeaDecoder::NibbleValue(char c)
+int16_t IRAM_ATTR NmeaDecoder::NibbleValue(char c)
 {
 	if ((c >= '0') && (c <= '9'))
 	{

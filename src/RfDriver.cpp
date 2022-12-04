@@ -146,6 +146,13 @@ void RfDriver::RfIsr()
 	}
 }
 
+int RfDriver::GetChipVersion()
+{
+	int version;
+	version=cc1101Driver.GetVersion();
+	return(version);
+}
+
 void RfDriver::RfIsr_Tx()
 {
 	if (rfState == RF_STATE_TX_TRANSMIT)

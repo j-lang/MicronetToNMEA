@@ -145,6 +145,10 @@ void setup()
 		}
 	}
 	CONSOLE.println("OK");
+        CONSOLE.print("CC1101-Chip-Version: 0x");
+	if (gRfReceiver.GetChipVersion() < 16) CONSOLE.print("0");
+	CONSOLE.println(gRfReceiver.GetChipVersion(),HEX);
+	if (gRfReceiver.GetChipVersion() == 4) CONSOLE.println("this chip version may not work propperly!");
 
 	CONSOLE.print("Initializing navigation compass ... ");
 	if (!gNavCompass.Init())

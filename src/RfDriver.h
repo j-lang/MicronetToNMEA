@@ -77,6 +77,7 @@ public:
 	void SetFrequency(float frequency_MHz);
 	void SetBandwidth(RfBandwidth_t bandwidth);
 	void RfIsr();
+	int  GetChipVersion();
 	void RestartReception();
 	void Transmit(MicronetMessageFifo *txMessageFifo);
 	void Transmit(MicronetMessage_t *message);
